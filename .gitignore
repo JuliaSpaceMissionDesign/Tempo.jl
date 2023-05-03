@@ -1,0 +1,4 @@
+.vscode
+Manifest.toml
+temp/
+build/
