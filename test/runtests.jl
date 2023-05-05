@@ -1,8 +1,8 @@
 using Tempo
-using ERFA 
+using ERFA
 
 using Test
 
-@testset "Tempo.jl" verbose=true begin
+@testset "Tempo.jl" verbose = true begin
     include("Tempo/Tempo.jl")
 end;

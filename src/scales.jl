@@ -254,4 +254,3 @@ add_timescale(TIMESCALES, TCB, offset_tdb2tcb; parent=TDB, ftp=offset_tcb2tdb)
 add_timescale(TIMESCALES, UTC, offset_tai2utc; parent=TAI, ftp=offset_utc2tai)
 add_timescale(TIMESCALES, TDBH, offset_tt2tdbh; parent=TT)
 add_timescale(TIMESCALES, GPS, offset_gps2tai; parent=TAI, ftp=offset_tai2gps)
-
