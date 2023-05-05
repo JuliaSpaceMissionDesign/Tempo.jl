@@ -14,6 +14,7 @@ SMDInterfacesUtils = "a641f28f-8d9e-4160-8071-676a3167f41f"
 [compat]
 FunctionWrappers = "1"
 PrecompileTools = "1"
+RemoteFiles = "0.5"
 SMDGraphs = "0.1"
 SMDInterfacesUtils = "1"
 julia = "1"
