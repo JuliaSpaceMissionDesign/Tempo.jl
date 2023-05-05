@@ -39,7 +39,7 @@ function get_leapseconds(;
 end
 
 """
-Leapseconds{T}
+    Leapseconds{T}
 
 Stores information about leap seconds that have been added to Coordinated Universal Time (UTC) 
 since the start of the year 2000.

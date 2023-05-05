@@ -65,8 +65,7 @@ end
 ########
 
 """
-    Date{N<:Integer}
-
+    Date
 Type to represent a calendar date.
 
 ### Fields
