@@ -39,6 +39,23 @@ end
     @test Tempo.second(Float64, t) == 15.300300300
     @test Tempo.second(Int64, t) == 15
     @test Tempo.fraction_of_second(t) ≈ 0.300300300
+
+    @test_throws Exception Time(-1, 0, 0.0) 
+    @test_throws Exception Time(25, 0, 0.0)
+    @test_throws Exception Time(1, 61, 0, 0.0)
+    @test_throws Exception Time(1, 0, 61, 0.0)
+    @test_throws Exception Time(1, 0, 0, 61.0)  
+    @test_throws Exception Time(86401, 0.0)
+
+    @test second(t) == 15
+    @test Tempo.hms2fd(t0) == 0.5
+    @test Tempo.fraction_of_second(t0) == 0.0
+    for _ in 1:30
+        fs = rand(0.0:0.99999)
+        t1 = Time(0, 0, 0, fs)
+        @test Tempo.fraction_of_second(t1) == fs
+    end
+    @test Tempo.second_in_day(t0) == 43200.0
 end
 
 @testset "DateTime" begin
@@ -69,4 +86,10 @@ end
     dtr = rand(0.0:1.0:(365.25 * 86400.0))
     dt2 = dt + dtr
     @test Tempo.j2000s(dt2) - Tempo.j2000s(dt) ≈ dtr
+    
+    d = Date(2000, 1, 1)
+    dt = DateTime(d, 0.0)
+    @test DateTime{Float64}(dt) == dt
+    dt1 = dt + 1.0
+    @test dt < dt1
 end

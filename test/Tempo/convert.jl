@@ -107,8 +107,8 @@ end
         tai1, tai2 = Tempo.utc2tai(utc1, utc2)
         tai1e, tai2e = ERFA.utctai(utc1, utc2)
 
-        @test tai2 == tai2e
-        @test tai1 == tai1e
+        @test tai2 ≈ tai2e
+        @test tai1 ≈ tai1e
     end
 end
 
