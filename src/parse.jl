@@ -116,8 +116,8 @@ function parse_iso(s::S) where {S<:AbstractString}
     @label error
     throw(
         ArgumentError(
-            "[Tempo] Invalid ISO Epoch string! " *
-            "The correct format is YYYY-MM-DDThh:mm:ss.ffff!",
+            "invalid ISO Epoch string - " *
+            "the accepted format is YYYY-MM-DDThh:mm:ss.ffff",
         ),
     )
 end

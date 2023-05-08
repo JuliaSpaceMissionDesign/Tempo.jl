@@ -99,7 +99,7 @@ function add_timescale(
         # the given time system 
         throw(
             ErrorException(
-                "[Tempo] TimeScale with id $id is already registered in the given TimeSystem",
+                "TimeScale with id $id is already registered in the given TimeSystem",
             ),
         )
     end
@@ -108,7 +108,7 @@ function add_timescale(
         # Check if timescale with the same name also does not already exist
         throw(
             ErrorException(
-                "[Tempo] TimeScale with name $name is already registered in the given TimeSystem",
+                "TimeScale with name $name is already registered in the given TimeSystem",
             ),
         )
     end
@@ -122,14 +122,14 @@ function add_timescale(
         if !has_timescale(scales, pid)
             throw(
                 ErrorException(
-                    "[Tempo] the specified parent timescale with id $pid is not " *
+                    "the specified parent timescale with id $pid is not " *
                     "registered in the given TimeSystem",
                 ),
             )
         end
     else
         if !isempty(scales.scales)
-            throw(ErrorException("[Tempo] TimeSystem has already a root point!"))
+            throw(ErrorException("TimeSystem has already a root point!"))
         end
         pid = id
     end

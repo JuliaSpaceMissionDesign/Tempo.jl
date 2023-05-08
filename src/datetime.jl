@@ -158,7 +158,7 @@ end
 
 function Date(year::N, dayinyear::N) where {N<:Integer}
     if dayinyear <= 0
-        throw(error("[Tempo] day in year must me ≥ than 0! $dayinyear provided."))
+        throw(DomainError("day in year must me ≥ than 0! $dayinyear provided."))
     end
     ly = isleapyear(year)
     month = find_month(dayinyear, ly)
@@ -217,13 +217,13 @@ struct Time{T}
         hour::N, minute::N, second::N, fraction::T
     ) where {N<:Integer,T<:AbstractFloat}
         if hour < 0 || hour > 23
-            throw(ArgumentError("`hour` must be an integer between 0 and 23."))
+            throw(DomainError("`hour` must be an integer between 0 and 23."))
         elseif minute < 0 || minute > 59
-            throw(ArgumentError("`minute` must be an integer between 0 and 59."))
+            throw(DomainError("`minute` must be an integer between 0 and 59."))
         elseif second < 0 || second >= 61
-            throw(ArgumentError("`second` must be an integer between 0 and 61."))
+            throw(DomainError("`second` must be an integer between 0 and 61."))
         elseif fraction < 0 || fraction > 1
-            throw(ArgumentError("`fraction` must be a number between 0 and 1."))
+            throw(DomainError("`fraction` must be a number between 0 and 1."))
         end
         return new{T}(hour, minute, second, fraction)
     end
@@ -237,8 +237,8 @@ end
 function Time(secondinday::Integer, fraction::T) where {T<:AbstractFloat}
     if secondinday < 0 || secondinday > 86400
         throw(
-            ArgumentError(
-                "[Tempo] seconds are out of range. Must be between 0 and 86400, provided $secondinday.",
+            DomainError(
+                "seconds are out of range. Must be between 0 and 86400, provided $secondinday.",
             ),
         )
     end

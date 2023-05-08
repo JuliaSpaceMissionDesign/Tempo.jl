@@ -12,10 +12,15 @@ S = Tempo.TimeSystem{Float64}()
 @timescale ATS 1 ATimeScale
 @timescale BTS 2 BTimeScale
 @timescale CTS 3 CTimeScale
+@timescale DTSerr 3 DerrTimeScale
+@timescale DTS 4 DTimeScale
+@timescale ETS 5 ETimeScale
 
 Tempo.add_timescale(S, ATS, Tempo._zero_offset)
 Tempo.add_timescale(S, BTS, _one_offset; parent=ATS, ftp=_mone_offset)
 Tempo.add_timescale(S, CTS, _one_offset; parent=BTS, ftp=_mone_offset)
+
+struct CustomTimeScale <: Tempo.AbstractTimeScale end
 
 @testset "TimeSystem" verbose = true begin
     @test Tempo.apply_offsets(S, 0.0, ATS, CTS) ≈ 2.0
@@ -23,6 +28,17 @@ Tempo.add_timescale(S, CTS, _one_offset; parent=BTS, ftp=_mone_offset)
     @test Tempo.apply_offsets(S, 0.0, ATS, BTS) ≈ 1.0
     @test Tempo.apply_offsets(S, 0.0, BTS, ATS) ≈ -1.0
 
+    @test Tempo.timescale_alias(1) == 1
+    @test isnothing(Tempo.timescale_id(CustomTimeScale()))
+    @test isnothing(Tempo.timescale_name(CustomTimeScale()))
+
+    # same id
+    @test_throws Exception Tempo.add_timescale(S, DTSerr, Tempo._zero_offset)
+    # root point
+    @test_throws Exception Tempo.add_timescale(S, DTS, Tempo._zero_offset)
+    # parent not registered 
+    @test_throws Exception Tempo.add_timescale(S, ETS, Tempo._zero_offset; parent=DTS)
+    
     @testset "apply_offsets" begin
         D2S = 86400.0
 

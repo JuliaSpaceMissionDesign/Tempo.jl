@@ -228,8 +228,21 @@ end
 Base.convert(::Type{S}, e::Epoch{S}) where {S<:AbstractTimeScale} = e
 Base.convert(::S, e::Epoch{S}) where {S<:AbstractTimeScale} = e
 
+"""
+    convert(to::S2, e::Epoch{S1}; system::TimeSystem=TIMESCALES)
+
+Convert `Epoch` with timescale `S1` to `S2`. Allows to use the default `TimeSystem` or 
+a custom constructed one. 
+"""
 function Base.convert(
     to::S2, e::Epoch{S1}; system::TimeSystem=TIMESCALES
 ) where {S1<:AbstractTimeScale,S2<:AbstractTimeScale}
-    return Epoch{S2}(apply_offsets(system, e.seconds, timescale(e), to))
+    try
+        return Epoch{S2}(apply_offsets(system, e.seconds, timescale(e), to))
+    catch
+        EpochConversionError(
+            String(Symbol(@__MODULE__)),
+            "cannot convert Epoch from timescale $S1 to $S2"
+        )
+    end
 end

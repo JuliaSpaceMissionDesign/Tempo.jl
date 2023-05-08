@@ -28,22 +28,19 @@ function hms2fd(h::Number, m::Number, s::Number)
     # Validate arguments
     if h < 0 || h > 23
         throw(
-            EpochConversionError(
-                String(Symbol(@__MODULE__)),
+            DomainError(
                 "invalid hour provided, must be between 0 and 23",
             ),
         )
     elseif m < 0 || m > 59
         throw(
-            EpochConversionError(
-                String(Symbol(@__MODULE__)),
+            DomainError(
                 "invalid minutes provided, must be between 0 and 59",
             ),
         )
     elseif s < 0.0 || s >= 60.0
         throw(
-            EpochConversionError(
-                String(Symbol(@__MODULE__)),
+            DomainError(
                 "invalid seconds provided, must be between 0.0 and 59.99999999999999",
             ),
         )
@@ -60,8 +57,7 @@ function fd2hms(fd::Number)
     secinday = fd * 86400.0
     if secinday < 0 || secinday > 86400
         throw(
-            EpochConversionError(
-                String(Symbol(@__MODULE__)),
+            DomainError(
                 "seconds are out of range: must be between 0 and 86400, provided $secinday",
             ),
         )
@@ -140,16 +136,14 @@ function cal2jd(Y::Number, M::Number, D::Number)
     # Validate year and month
     if Y < 1583
         throw(
-            EpochConversionError(
-                String(Symbol(@__MODULE__)),
+            DomainError(
                 "invalid year provided, must be greater than 1583",
             ),
         )
 
     elseif M < 1 || M > 12
         throw(
-            EpochConversionError(
-                String(Symbol(@__MODULE__)),
+            DomainError(
                 "invalid month provided, must be between 1 and 12",
             ),
         )
@@ -162,8 +156,7 @@ function cal2jd(Y::Number, M::Number, D::Number)
     # Validate day, taking into account leap years
     if (D < 1) || (D > (MTAB[M] + ly))
         throw(
-            EpochConversionError(
-                String(Symbol(@__MODULE__)),
+            DomainError(
                 "invalid day provided, shall be between 1 and $(MTAB[M]+ly)",
             ),
         )
@@ -250,8 +243,7 @@ function jd2cal(dj1::Number, dj2::Number)
     dj = dj1 + dj2
     if dj < -68569.5 || dj > 1e9
         throw(
-            EpochConversionError(
-                String(Symbol(@__MODULE__)),
+            DomainError(
                 "invalid JD provided, shall be between -68569.5 and 1e9",
             ),
         )
