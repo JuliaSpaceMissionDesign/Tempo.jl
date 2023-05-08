@@ -1,5 +1,15 @@
 
 @testset "Epoch" verbose = true begin
+
+    dt = DateTime("2004-05-14T16:43:32.0000")
+    e = Epoch(dt, TDB)
+    @test Epoch(dt, TDB) == Epoch("2004-05-14T16:43:32.0000 TDB")        
+    @test Epoch(86400.0, Tempo.TerrestrialTime) == Epoch("2000-01-02T12:00:00.0000 TT")
+    @test Epoch(dt, Tempo.TerrestrialTime) == Epoch("2004-05-14T16:43:32.0000 TT")
+    @test Epoch(e) == e
+    @test convert(TDB, e) == e
+    @test convert(BarycentricDynamicalTime, e) == e
+
     @testset "String constructors" begin
         s, ry, rm, rd, rH, rM, rS, rF = _random_epoch()
         e = Epoch(s)

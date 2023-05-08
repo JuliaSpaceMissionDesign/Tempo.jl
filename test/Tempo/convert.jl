@@ -21,9 +21,9 @@ end
         @test Tempo.hms2fd(h, m, s) ≈ ((s / 60 + m) / 60 + h) / 24
     end
 
-    @test_throws Tempo.EpochConversionError Tempo.hms2fd(24, 0, 0.0)
-    @test_throws Tempo.EpochConversionError Tempo.hms2fd(23, 61, 0.0)
-    @test_throws Tempo.EpochConversionError Tempo.hms2fd(20, 1, 61.0)
+    @test_throws DomainError Tempo.hms2fd(24, 0, 0.0)
+    @test_throws DomainError Tempo.hms2fd(23, 61, 0.0)
+    @test_throws DomainError Tempo.hms2fd(20, 1, 61.0)
 end
 
 @testset "Function fd2hms" begin
@@ -42,10 +42,10 @@ end
         )
     end
 
-    @test_throws Tempo.EpochConversionError Tempo.fd2hms(-0.1)
-    @test_throws Tempo.EpochConversionError Tempo.fd2hms(1.5)
-    @test_throws Tempo.EpochConversionError Tempo.fd2hmsf(-0.1)
-    @test_throws Tempo.EpochConversionError Tempo.fd2hmsf(1.5)
+    @test_throws DomainError Tempo.fd2hms(-0.1)
+    @test_throws DomainError Tempo.fd2hms(1.5)
+    @test_throws DomainError Tempo.fd2hmsf(-0.1)
+    @test_throws DomainError Tempo.fd2hmsf(1.5)
 end
 
 @testset "Function cal2jd" begin
@@ -55,15 +55,15 @@ end
     @test sum(Tempo.cal2jd(Y, M, D)) - 0.5 + Tempo.hms2fd(h, m, s) ≈
         sum(Tempo.calhms2jd(Y, M, D, h, m, s))
 
-    @test_throws Tempo.EpochConversionError Tempo.cal2jd(
+    @test_throws DomainError Tempo.cal2jd(
         rand(0:1580), rand(1:12), rand(1:28)
     )
-    @test_throws Tempo.EpochConversionError Tempo.cal2jd(rand(1600:2600), rand(1:12), 0)
-    @test_throws Tempo.EpochConversionError Tempo.cal2jd(1850, 0, rand(1:28))
-    @test_throws Tempo.EpochConversionError Tempo.cal2jd(2500, 13, 0)
-    @test_throws Tempo.EpochConversionError Tempo.cal2jd(2150, 1, 32)
-    @test_throws Tempo.EpochConversionError Tempo.cal2jd(1999, 6, 0)
-    @test_throws Tempo.EpochConversionError Tempo.cal2jd(2000, 2, 32)
+    @test_throws DomainError Tempo.cal2jd(rand(1600:2600), rand(1:12), 0)
+    @test_throws DomainError Tempo.cal2jd(1850, 0, rand(1:28))
+    @test_throws DomainError Tempo.cal2jd(2500, 13, 0)
+    @test_throws DomainError Tempo.cal2jd(2150, 1, 32)
+    @test_throws DomainError Tempo.cal2jd(1999, 6, 0)
+    @test_throws DomainError Tempo.cal2jd(2000, 2, 32)
     @test sum(Tempo.calhms2jd(1970, 1, 1, 15, 0, 0.0)) ≈ 2440588.125
 end
 
