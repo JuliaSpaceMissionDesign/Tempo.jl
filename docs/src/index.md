@@ -10,9 +10,9 @@ application of the `JSMD` ecosystem.
 
 There are different ways to represent an epoch within `Tempo`, depending on the specific 
 application. This section is here to help you choose the proper time representation and to 
-present the capabilities of the module in trasforming time between different representations.
+present the capabilities of the module in transforming time between different representations.
 
-First of all, there is a deep difference in the way time is tought in the everyday life and 
+First of all, there is a deep difference in the way time is thought in the everyday life and 
 when dealing with space-related applications. 
 Whenever we say _the 12:35 of the 1st of January 2023_, we are merging three concepts: 
 the **calendar** (_1st January 2023_) and the **time representation** (_12:35_) together with

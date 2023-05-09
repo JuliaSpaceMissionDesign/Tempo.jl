@@ -186,7 +186,7 @@ end
         # is used 
         offset = ts1.ftp(sec)
     else # ts2.parentid == ts1.id
-        # In this case the direct transfromation (from parent to child is used)
+        # In this case the direct transformation (from parent to child is used)
         offset = ts2.ffp(sec)
     end
     return offset

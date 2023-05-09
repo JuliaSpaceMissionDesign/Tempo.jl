@@ -4,7 +4,7 @@ export Epoch, j2000, j2000s, j2000c, second, timescale, value
     Epoch
 
 A type to represent Epoch-like data. 
-Epochs here are represented as seconds + fraction since a refence epoch, which 
+Epochs here are represented as seconds + fraction since a reference epoch, which 
 is considered to be `2000-01-01T12:00:00`, i.e. [`J2000`](@ref).
 
 ### Fields 
@@ -120,7 +120,7 @@ Construct an `Epoch` from a `str`.
     - **JD** -- `JD DDDDDDDDD.ffffff` : parse Julian Date (days)
     - **MJD** -- `MJD DDDDDDDDD.ffffff` : parse Julian Dates since (days)
     In all cases the `TimeScale` should be added at the end of the string, 
-    separated by a whitespace. If it is not declated, [`TDB`](@ref) will be 
+    separated by a whitespace. If it is not declared, [`TDB`](@ref) will be 
     used as timescale. 
 
 ### Examples
