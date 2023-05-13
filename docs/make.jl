@@ -7,7 +7,11 @@ makedocs(;
     modules=[Tempo],
     pages=[
         "Home" => "index.md",
-        "API" => "api.md"
+        "API" => "api.md",
+        "Tutorials" => [
+            "Epochs" => "tutorials/t01_epochs.md",
+            "Scales" => "tutorials/t02_scales.md"
+        ]
     ],
 )
 
