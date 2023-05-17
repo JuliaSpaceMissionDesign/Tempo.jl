@@ -488,18 +488,15 @@ end
 
 Convert a [`DateTime`](@ref) `dt` to seconds since J2000
 """
-function j2000s(dt::DateTime)
-    return j2000(dt::DateTime) * DAY2SEC
-end
+j2000s(dt::DateTime) = j2000(dt::DateTime) * DAY2SEC
+
 
 """
     j2000c(dt::DateTime)
 
 Convert  a [`DateTime`](@ref) `dt` in a Julian Date since [`DJ2000`](@ref), in centuries.
 """
-function j2000c(dt::DateTime)
-    return j2000(dt) / CENTURY2DAY
-end
+j2000c(dt::DateTime) = j2000(dt) / CENTURY2DAY
 
 Base.isless(d1::DateTime, d2::DateTime) = j2000(d1) < j2000(d2)
 Base.:(==)(d1::DateTime, d2::DateTime) = j2000(d1) == j2000(d2)
