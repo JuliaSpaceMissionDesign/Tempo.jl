@@ -1,14 +1,13 @@
 module Tempo
 
-import FunctionWrappers: FunctionWrapper
-using RemoteFiles: @RemoteFile, download
-
 # TODO: remove this dependency - could be handled by Tempo itself?
 using Dates: DateTime as DatesDateTime, datetime2julian, now
 
-using SMDInterfacesUtils.Utils: format_camelcase
-using SMDInterfacesUtils.Math: interpolate
-using SMDInterfacesUtils.Interfaces.Errors: AbstractGenericException, @module_error
+using JSMDInterfaces.Errors: AbstractGenericException, @module_error
+using JSMDUtils
+
+using Pkg.Artifacts
+using PrecompileTools: PrecompileTools
 
 using SMDGraphs:
     MappedNodeGraph,
@@ -21,9 +20,9 @@ using SMDGraphs:
     get_mappedid,
     get_mappednode
 
+import FunctionWrappers: FunctionWrapper
 import SMDGraphs: get_node_id, add_vertex!
 
-using PrecompileTools: PrecompileTools
 
 const DAY2SEC = 86400.0
 const YEAR2SEC = 60.0 * 60.0 * 24.0 * 365.25

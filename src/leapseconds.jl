@@ -1,32 +1,20 @@
 """
-    get_leapseconds(; 
-        url::String="https://naif.jpl.nasa.gov/pub/naif/generic_kernels/lsk/latest_leapseconds.tls",
-        force_download::Bool=false)
+    get_leapseconds()
 
-Download and parse leapseconds data and return a `Leapseconds` type. 
+Parse leapseconds data and return a `Leapseconds` type. 
 
-The files are downloaded using the `RemoteFile` package with monthly updates. Hence, if one 
-desires to force a download before the scheduled time, then set the keyword `force_download`  
-to `true`. Updates scheduled every month.
+The leapsecond kernel is retrieved from the artifacts of this package. This artifact will 
+be updated whenever a new leapsecond is added.
 """
-function get_leapseconds(;
-    url::String="https://naif.jpl.nasa.gov/pub/naif/generic_kernels/lsk/latest_leapseconds.tls",
-    force_download::Bool=false,
-)
-    @RemoteFile(
-        _leapseconds,
-        url,
-        file = "leapseconds_latest.tls",
-        dir = joinpath(@__DIR__, "..", "..", "ext"),
-        updates = :monthly
-    )
-
-    download(_leapseconds; force=force_download, force_update=true)
+function get_leapseconds()
 
     t = Vector{Float64}()
     leap = Vector{Float64}()
     re = r"(?<dat>[0-9]{2}),\s+@(?<date>[0-9]{4}-[A-Z]{3}-[0-9])"
-    lines = readlines(joinpath(@__DIR__, "..", "..", "ext", "leapseconds_latest.tls"))
+
+    leap_path = artifact"leapseconds"
+    lines = readlines(joinpath(leap_path, "leapseconds.tls"))
+
     for line in lines
         s = string(line)
         if occursin(re, s)
@@ -80,20 +68,7 @@ const LEAPSECONDS::Leapseconds{Float64} = get_leapseconds()
 """
     leapseconds(jd2000::Number)
 
-For a given UTC date, calculate Delta(AT) = TAI-UTC.
-
-!!!! warning 
-    A new version of the tables called in this function must be produced whenever a new leap 
-    second is announced. This is automatically done using `RemoteFiles`.
-
-### Inputs 
-
-- `jd2000` -- UTC Julian days since `J2000`. 
-
-### Output 
-
-- `Δt` -- TAI - UTC in seconds
-
+For a given UTC date, in Julian days since [`J2000`](@ref) calculate Delta(AT) = TAI - UTC.
 """
 function leapseconds(jd2000::Number)
     return LEAPSECONDS.leap[searchsortedlast(LEAPSECONDS.jd2000, jd2000)]
