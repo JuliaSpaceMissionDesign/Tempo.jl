@@ -1,3 +1,4 @@
+
 const MTAB = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
 const PREVIOUS_MONTH_END_DAY_LEAP = (0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335)
 const PREVIOUS_MONTH_END_DAY = (0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334)
@@ -27,21 +28,13 @@ converted in type `T`.
 function hms2fd(h::Number, m::Number, s::Number)
     # Validate arguments
     if h < 0 || h > 23
-        throw(
-            DomainError(
-                "invalid hour provided, must be between 0 and 23",
-            ),
-        )
+        throw(DomainError("invalid hour provided, must be between 0 and 23"))
     elseif m < 0 || m > 59
-        throw(
-            DomainError(
-                "invalid minutes provided, must be between 0 and 59",
-            ),
-        )
+        throw(DomainError("invalid minutes provided, must be between 0 and 59"))
     elseif s < 0.0 || s >= 60.0
         throw(
             DomainError(
-                "invalid seconds provided, must be between 0.0 and 59.99999999999999",
+                "invalid seconds provided, must be between 0.0 and 59.99999999999999"
             ),
         )
     end
@@ -58,7 +51,7 @@ function fd2hms(fd::Number)
     if secinday < 0 || secinday > 86400
         throw(
             DomainError(
-                "seconds are out of range: must be between 0 and 86400, provided $secinday",
+                "seconds are out of range: must be between 0 and 86400, provided $secinday"
             ),
         )
     end
@@ -135,18 +128,10 @@ j2000, d = cal2jd(2020, 2, 29)
 function cal2jd(Y::Number, M::Number, D::Number)
     # Validate year and month
     if Y < 1583
-        throw(
-            DomainError(
-                "invalid year provided, must be greater than 1583",
-            ),
-        )
+        throw(DomainError("invalid year provided, must be greater than 1583"))
 
     elseif M < 1 || M > 12
-        throw(
-            DomainError(
-                "invalid month provided, must be between 1 and 12",
-            ),
-        )
+        throw(DomainError("invalid month provided, must be between 1 and 12"))
     end
 
     # If February in a leap year, 1, otherwise 0
@@ -155,11 +140,7 @@ function cal2jd(Y::Number, M::Number, D::Number)
 
     # Validate day, taking into account leap years
     if (D < 1) || (D > (MTAB[M] + ly))
-        throw(
-            DomainError(
-                "invalid day provided, shall be between 1 and $(MTAB[M]+ly)",
-            ),
-        )
+        throw(DomainError("invalid day provided, shall be between 1 and $(MTAB[M]+ly)"))
     end
 
     Y = Y - 1
@@ -242,11 +223,7 @@ is 1e9. If the input JD is outside this range, an `EpochConversionError` is thro
 function jd2cal(dj1::Number, dj2::Number)
     dj = dj1 + dj2
     if dj < -68569.5 || dj > 1e9
-        throw(
-            DomainError(
-                "invalid JD provided, shall be between -68569.5 and 1e9",
-            ),
-        )
+        throw(DomainError("invalid JD provided, shall be between -68569.5 and 1e9"))
     end
 
     # Copy the date, big then small, and re-align to midnight

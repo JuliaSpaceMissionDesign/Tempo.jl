@@ -7,7 +7,6 @@ The leapsecond kernel is retrieved from the artifacts of this package. This arti
 be updated whenever a new leapsecond is added.
 """
 function get_leapseconds()
-
     t = Vector{Float64}()
     leap = Vector{Float64}()
     re = r"(?<dat>[0-9]{2}),\s+@(?<date>[0-9]{4}-[A-Z]{3}-[0-9])"

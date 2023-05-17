@@ -1,10 +1,10 @@
 @testset "Function isleapyear" begin
     for y in (2004, 2008, 2012, 2016)
-        @test isleapyear(y)
+        @test Tempo.isleapyear(y)
     end
 
     for y in (2003, 2005, 2015, 2017)
-        @test !isleapyear(y)
+        @test !Tempo.isleapyear(y)
     end
 end
 

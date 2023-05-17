@@ -241,8 +241,7 @@ function Base.convert(
         return Epoch{S2}(apply_offsets(system, e.seconds, timescale(e), to))
     catch
         EpochConversionError(
-            String(Symbol(@__MODULE__)),
-            "cannot convert Epoch from timescale $S1 to $S2"
+            String(Symbol(@__MODULE__)), "cannot convert Epoch from timescale $S1 to $S2"
         )
     end
 end

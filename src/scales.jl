@@ -24,6 +24,13 @@ struct TimeSystem{T<:Number}
     end
 end
 
+"""
+AbstractTimeScale
+
+All timescales are subtypes of the abstract type `AbstractTimeScale`.
+"""
+abstract type AbstractTimeScale end
+
 timescale_alias(s::AbstractTimeScale) = timescale_id(s)
 timescale_alias(s::Int) = s
 timescale_id(::AbstractTimeScale) = nothing
@@ -99,7 +106,7 @@ function add_timescale(
         # the given time system 
         throw(
             ErrorException(
-                "TimeScale with id $id is already registered in the given TimeSystem",
+                "TimeScale with id $id is already registered in the given TimeSystem"
             ),
         )
     end
@@ -108,7 +115,7 @@ function add_timescale(
         # Check if timescale with the same name also does not already exist
         throw(
             ErrorException(
-                "TimeScale with name $name is already registered in the given TimeSystem",
+                "TimeScale with name $name is already registered in the given TimeSystem"
             ),
         )
     end

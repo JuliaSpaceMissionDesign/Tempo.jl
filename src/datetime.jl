@@ -3,18 +3,13 @@ export Date,
     year,
     month,
     day,
-    isleapyear,
     find_dayinyear,
-    cal2jd,
     j2000,
     j2000s,
     j2000c,
     hour,
     minute,
     second,
-    fraction_of_second,
-    fraction_of_day,
-    second_in_day,
     DateTime
 
 function lastj2000dayofyear(year::N) where {N<:Integer}
