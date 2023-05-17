@@ -24,20 +24,13 @@ function tryparsenext_base10(
 end
 
 """
-    parse_iso(s::S) where {S<: AbstractString}
+    parse_iso(s::AbstractString)
 
-Parse ISO datetime string.
-
-### Input 
-
-- `s` -- ISO datetime `String` in the format `YYYY-MM-DDThh:mm:ss.ffffffff`
-
-### Output 
-
-A `Tuple` containing `year`, `month`, `day`, `hour`, `minute`, `second` and 
-`millisecond` is parsed if the string is ISO otherwise an error is throw.
+Parse an ISO datetime string, in the format `YYYY-MM-DDThh:mm:ss.ffffffff` and return 
+a `Tuple` containing the year, month, day , hour, minute, second and milliseconds. If the 
+string format is not recognised as ISO, an `ArgumentError` is thrown.
 """
-function parse_iso(s::S) where {S<:AbstractString}
+function parse_iso(s::AbstractString)
     i, end_pos = firstindex(s), lastindex(s)
 
     local dy

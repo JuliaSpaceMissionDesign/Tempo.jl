@@ -12,52 +12,53 @@ export Date,
     second,
     DateTime
 
-function lastj2000dayofyear(year::N) where {N<:Integer}
+function lastj2000dayofyear(year::Integer)
     return 365 * year + year ÷ 4 - year ÷ 100 + year ÷ 400 - 730120
 end
 
 """
-    find_year(d::N) where {N<:Integer}
+    find_year(d::Integer)
 
-Find year from j2000 day
+Return the Gregorian year associated to the given Julian Date day `d`.
 """
-function find_year(d::N) where {N<:Integer}
+function find_year(d::Integer)
     j2d = ifelse(d isa Int32, widen(d), d)
     year = (400 * j2d + 292194288) ÷ 146097
+    
     # The previous estimate is one unit too high in some rare cases
     # (240 days in the 400 years gregorian cycle, about 0.16%)
     if j2d <= lastj2000dayofyear(year - 1)
         year -= 1
     end
+
     return year
 end
 
 """
-    find_month(dayinyear::N, isleap::Bool) where {N<:Integer}
+    find_month(dayinyear::Integer, isleap::Bool)
 
-Find month from the day in the year and using if the year is leap or not.
+Find the month from the day of the year, depending on whether the year is leap or not.
 """
-function find_month(dayinyear::N, isleap::Bool) where {N<:Integer}
+function find_month(dayinyear::Integer, isleap::Bool)
     offset = ifelse(isleap, 313, 323)
     return ifelse(dayinyear < 32, 1, (10 * dayinyear + offset) ÷ 306)
 end
 
 """
-    find_day(dayinyear::N, month::N, isleap::Bool) where {N<:Integer}
+    find_day(dayinyear::Integer, month::Integer, isleap::Bool)
 
 Find day from the day in the year, the month and using if the year is leap or not.
 """
-function find_day(dayinyear::N, month::N, isleap::Bool) where {N<:Integer}
+function find_day(dayinyear::Integer, month::Integer, isleap::Bool)
+    
     (!isleap && dayinyear > 365) && throw(
-        ArgumentError("[Tempo] day of year cannot greater than 366 for a non-leap year."),
+        DomainError("[Tempo] day of year cannot greater than 366 for a non-leap year."),
     )
     previous_days = ifelse(isleap, PREVIOUS_MONTH_END_DAY_LEAP, PREVIOUS_MONTH_END_DAY)
     return dayinyear - previous_days[month]
 end
 
-########
-# DATE #
-########
+
 
 """
     Date
@@ -92,42 +93,42 @@ end
 """
     year(d::Date)
 
-Get year associated to `Date` type.
+Get year associated to a [`Date`](@ref) `d`.
 """
 year(d::Date) = d.year
 
 """
     month(d::Date)
 
-Get month associated to `Date` type.
+Get month associated to a [`Date`](@ref) `d`.
 """
 month(d::Date) = d.month
 
 """
     day(d::Date)
 
-Get day associated to `Date` type.
+Get day associated to a [`Date`](@ref) `d`.
 """
 day(d::Date) = d.day
 
 """
-    isleapyear(d::Date)::Bool
+    isleapyear(d::Date)
 
-Find if `Date` has a leap year.
+True if [`Date`](@ref) is within a leap year.
 """
 isleapyear(d::Date) = isleapyear(year(d))
 
 """
     find_dayinyear(d::Date)
 
-Find day in the year.
+Find the day in the year.
 """
 find_dayinyear(d::Date) = find_dayinyear(month(d), day(d), isleapyear(d))
 
 """
     cal2jd(d::Date)
 
-Convert Gregorian calendar date to Julian Date.
+Convert Gregorian calendar [`Date`](@ref) to a Julian Date, in days.
 
 ### Outputs
 - `j2000` -- J2000 zero point: always 2451545
@@ -138,11 +139,12 @@ cal2jd(d::Date) = cal2jd(year(d), month(d), day(d))
 """
     j2000(d::Date)
 
-Convert Gregorian calendar date Julian Date past J2000
+Convert Gregorian calendar date [`Date`](@ref) to Julian Date since [`DJ2000`](@ref), 
+in days.
 """
 j2000(d::Date) = j2000(cal2jd(d)...)
 
-function Date(offset::N) where {N<:Integer}
+function Date(offset::Integer)
     year = find_year(offset)
     dayinyear = offset - lastj2000dayofyear(year - 1)
     ly = isleapyear(year)
@@ -151,7 +153,7 @@ function Date(offset::N) where {N<:Integer}
     return Date(year, month, day)
 end
 
-function Date(year::N, dayinyear::N) where {N<:Integer}
+function Date(year::Integer, dayinyear::Integer)
     if dayinyear <= 0
         throw(DomainError("day in year must me ≥ than 0! $dayinyear provided."))
     end
@@ -161,7 +163,7 @@ function Date(year::N, dayinyear::N) where {N<:Integer}
     return Date(year, month, day)
 end
 
-Date(d::Date, offset::N) where {N<:Integer} = Date(convert(N, j2000(d)) + offset)
+Date(d::Date, offset::Integer) = Date(convert(Int, j2000(d)) + offset)
 
 function Base.show(io::IO, d::Date)
     return print(io, year(d), "-", lpad(month(d), 2, '0'), "-", lpad(day(d), 2, '0'))
@@ -171,17 +173,15 @@ end
 function Base.isapprox(a::Date, b::Date; kwargs...)
     return a.year == b.year && a.month == b.month && a.day == b.day
 end
-Base.:+(d::Date, x::N) where {N<:Integer} = Date(d, x)
-Base.:-(d::Date, x::N) where {N<:Integer} = Date(d, -x)
 
-########
-# TIME #
-########
+Base.:+(d::Date, x::Integer) = Date(d, x)
+Base.:-(d::Date, x::Integer) = Date(d, -x)
+
 
 """
     Time{T<:AbstractFloat}
 
-A type representing a time of the day.
+A type representing the time of the day.
 
 ### Fields
 
@@ -209,8 +209,8 @@ struct Time{T}
     second::Int
     fraction::T
     function Time(
-        hour::N, minute::N, second::N, fraction::T
-    ) where {N<:Integer,T<:AbstractFloat}
+        hour::Integer, minute::Integer, second::Integer, fraction::T
+    ) where {T <: AbstractFloat}
         if hour < 0 || hour > 23
             throw(DomainError("`hour` must be an integer between 0 and 23."))
         elseif minute < 0 || minute > 59
@@ -224,12 +224,12 @@ struct Time{T}
     end
 end
 
-function Time(hour::N, minute::N, second::T) where {N<:Integer,T<:AbstractFloat}
+function Time(hour::Integer, minute::Integer, second::Number)
     sec, frac = divrem(second, 1)
-    return Time(hour, minute, convert(N, sec), frac)
+    return Time(hour, minute, convert(Int, sec), frac)
 end
 
-function Time(secondinday::Integer, fraction::T) where {T<:AbstractFloat}
+function Time(secondinday::Integer, fraction::Number)
     if secondinday < 0 || secondinday > 86400
         throw(
             DomainError(
@@ -245,35 +245,35 @@ function Time(secondinday::Integer, fraction::T) where {T<:AbstractFloat}
 end
 
 """
-    hour(t::Time)::Integer
+    hour(t::Time)
 
 Get the current hour.
 """
 hour(t::Time) = t.hour
 
 """
-    minute(t::Time)::Integer
+    minute(t::Time)
 
 Get the current minute.
 """
 minute(t::Time) = t.minute
 
 """
-    second(::Type{<:AbstractFloat}, t::Time)::AbstractFloat
-    second(::Type{<:Integer}, t::Time)::Integer 
-    second(t::Time)::Int64 
+    second(::Type{<:AbstractFloat}, t::Time)
+    second(::Type{<:Integer}, t::Time)
+    second(t::Time)
 
 Get the current second.
 """
 second(::Type{<:AbstractFloat}, t::Time) = t.fraction + t.second
 second(::Type{<:Integer}, t::Time) = t.second
-second(t::Time) = second(Int64, t)
+second(t::Time) = second(Int, t)
 
 function subsecond(fraction, n, r)
     n % 3 == 0 || throw(ArgumentError("`n` must be divisible by 3."))
     factor = ifelse(Int === Int32, widen(10), 10)^n
     rounded = round(fraction, r; digits=n)
-    return round(Int64, rounded * factor, r) % 1000
+    return round(Int, rounded * factor, r) % 1000
 end
 
 function subsecond(fraction, n)
@@ -284,21 +284,21 @@ end
 subsecond(t::Time, n) = subsecond(t.fraction, n)
 
 """
-    millisecond(t::Time)::Integer
+    millisecond(t::Time)
 
 Get the current millisecond.
 """
 millisecond(t::Time) = subsecond(t.fraction, 3)
 
 """
-    microsecond(t::Time)::Integer
+    microsecond(t::Time)
 
 Get the current microsecond.
 """
 microsecond(t::Time) = subsecond(t.fraction, 6)
 
 """
-    nanosecond(t::Time)::Integer
+    nanosecond(t::Time)
 
 Get the current nanosecond.
 """
@@ -307,7 +307,7 @@ nanosecond(t::Time) = subsecond(t.fraction, 9)
 hms2fd(t::Time) = hms2fd(t.hour, t.minute, t.second + t.fraction)
 
 """
-    fraction_of_day(t::Time)::AbstractFloat
+    fraction_of_day(t::Time)
     hms2fd(t::Time)
 
 Find fraction of day.
@@ -324,7 +324,7 @@ julia> Tempo.fraction_of_day(t)
 fraction_of_day(t::Time) = hms2fd(t::Time)
 
 """
-    fraction_of_second(t::Time)::AbstractFloat
+    fraction_of_second(t::Time)
 
 Find fraction of seconds.
 
@@ -412,13 +412,13 @@ function DateTime(s::AbstractString)
     return DateTime(dy, dm, dd, th, tm, ts, tms)
 end
 
-function DateTime(seconds::T) where {T<:AbstractFloat}
+function DateTime(seconds::Number)
     y, m, d, H, M, Sf = jd2calhms(DJ2000, seconds / DAY2SEC)
     s = floor(Int64, Sf)
     return DateTime(y, m, d, H, M, s, Sf - s)
 end
 
-function DateTime(d::Date, sec::T) where {T<:AbstractFloat}
+function DateTime(d::Date, sec::Number)
     jd1 = j2000(d) + sec / DAY2SEC
     y, m, d, H, M, Sf = jd2calhms(DJ2000, jd1)
     s = floor(Int64, Sf)
@@ -432,51 +432,51 @@ DateTime{T}(dt::DateTime{T}) where {T} = dt
 """
     year(d::DateTime)
 
-Get year associated to `DateTime` type.
+Get year associated to a [`DateTime`](@ref) type.
 """
 year(dt::DateTime) = year(Date(dt))
 
 """
     month(d::DateTime)
 
-Get month associated to `DateTime` type.
+Get month associated to a [`DateTime`](@ref) type.
 """
 month(dt::DateTime) = month(Date(dt))
 
 """
     day(d::DateTime)
 
-Get day associated to `DateTime` type.
+Get day associated to a [`DateTime`](@ref) type.
 """
 day(dt::DateTime) = day(Date(dt))
 
 """
     hour(d::DateTime)
 
-Get hour associated to `DateTime` type.
+Get hour associated to a [`DateTime`](@ref) type.
 """
 hour(dt::DateTime) = hour(Time(dt))
 
 """
     minute(d::DateTime)
 
-Get minute associated to `DateTime` type.
+Get minute associated to a [`DateTime`](@ref) type.
 """
 minute(dt::DateTime) = minute(Time(dt))
 
 """
     second(d::DateTime)
 
-Get second associated to `DateTime` type.
+Get the seconds associated to a [`DateTime`](@ref) type.
 """
-second(dt::DateTime) = second(Float64, Time(dt))
+second(dt::DateTime) = second(Time(dt))
 
 Base.show(io::IO, dt::DateTime) = print(io, Date(dt), "T", Time(dt))
 
 """
     j2000(dt::DateTime)
 
-Convert `DateTime` in Julian days since J2000
+Convert a [`DateTime`](@ref) `dt` in Julian days since J2000
 """
 function j2000(dt::DateTime)
     jd1, jd2 = calhms2jd(year(dt), month(dt), day(dt), hour(dt), minute(dt), second(dt))
@@ -486,7 +486,7 @@ end
 """
     j2000s(dt::DateTime)
 
-Convert `DateTime` to seconds since J2000
+Convert a [`DateTime`](@ref) `dt` to seconds since J2000
 """
 function j2000s(dt::DateTime)
     return j2000(dt::DateTime) * DAY2SEC
@@ -495,7 +495,7 @@ end
 """
     j2000c(dt::DateTime)
 
-Convert `DateTime` in Julian Date since J2000 (centuries)
+Convert  a [`DateTime`](@ref) `dt` in a Julian Date since [`DJ2000`](@ref), in centuries.
 """
 function j2000c(dt::DateTime)
     return j2000(dt) / CENTURY2DAY
@@ -508,10 +508,6 @@ function Base.isapprox(d1::DateTime, d2::DateTime; kwargs...)
     return isapprox(j2000(d1), j2000(d2); kwargs...)
 end
 
-function Base.:+(d1::DateTime, δs::N) where {N<:Number}
-    return DateTime(j2000s(d1) + δs)
-end
+Base.:+(d1::DateTime, δs::Number) = DateTime(j2000s(d1) + δs)
+Base.:-(d1::DateTime, δs::Number) = DateTime(j2000s(d1) - δs)
 
-function Base.:-(d1::DateTime, δs::N) where {N<:Number}
-    return DateTime(j2000s(d1) - δs)
-end

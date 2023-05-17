@@ -6,48 +6,54 @@ const PREVIOUS_MONTH_END_DAY = (0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304
 """
     isleapyear(year::Integer)
 
-Check if a Gregorian year is leap. Return a `Bool`.
+Return `true` if the given Gregorian year is leap.
 """
 function isleapyear(year::Integer)
     return year % 4 == 0 && (year % 400 == 0 || year % 100 != 0)
 end
 
-function find_dayinyear(month::N, day::N, isleap::Bool) where {N<:Integer}
-    previous_days = ifelse(
-        isleap, PREVIOUS_MONTH_END_DAY_LEAP[month], PREVIOUS_MONTH_END_DAY[month]
-    )
-    return day + previous_days
+"""
+    find_dayinyear(month::Integer, day::Integer, isleap::Bool)
+
+Find the day of the year given the month, the day of the month and whether the year 
+is leap or not.
+"""
+function find_dayinyear(month::Integer, day::Integer, isleap::Bool)
+    if isleap 
+        return day + PREVIOUS_MONTH_END_DAY_LEAP[month]
+    else 
+        return day + PREVIOUS_MONTH_END_DAY[month]
+    end
 end
 
 """
-    hms2fd(h::Number, m::Number, s::Number)
+    hms2fd(h::Integer, m::Integer, s::Number)
 
-Convert hours, minutes, seconds to day fraction. The day fraction is returned 
-converted in type `T`.
+Convert hours, minutes and seconds to day fraction.
 """
-function hms2fd(h::Number, m::Number, s::Number)
+function hms2fd(h::Integer, m::Integer, s::Number)
     # Validate arguments
     if h < 0 || h > 23
         throw(DomainError("invalid hour provided, must be between 0 and 23"))
     elseif m < 0 || m > 59
         throw(DomainError("invalid minutes provided, must be between 0 and 59"))
-    elseif s < 0.0 || s >= 60.0
+    elseif s < 0 || s >= 60
         throw(
             DomainError(
                 "invalid seconds provided, must be between 0.0 and 59.99999999999999"
             ),
         )
     end
-    return ((60.0 * (60.0 * h + m)) + s) / 86400.0
+    return ((60 * (60 * h + m)) + s) / 86400
 end
 
 """
     fd2hms(fd::Number) 
 
-Convert day fraction to hour, minute, second.
+Convert the day fraction `fd` to hour, minute and seconds.
 """
 function fd2hms(fd::Number)
-    secinday = fd * 86400.0
+    secinday = fd * 86400
     if secinday < 0 || secinday > 86400
         throw(
             DomainError(
@@ -55,9 +61,9 @@ function fd2hms(fd::Number)
             ),
         )
     end
-    hours = Integer(secinday ÷ 3600)
+    hours = Int(secinday ÷ 3600)
     secinday -= 3600 * hours
-    mins = Integer(secinday ÷ 60)
+    mins = Int(secinday ÷ 60)
     secinday -= 60 * mins
     return hours, mins, secinday
 end
@@ -65,67 +71,45 @@ end
 """
     fd2hmsf(fd::Number) 
 
-Convert day fraction to hour, minute, second, fraction of seconds.
+Convert the day fraction `fd` to hour, minute, second and fraction of seconds.
 """
 function fd2hmsf(fd::Number)
     h, m, sid = fd2hms(fd)
-    sec = Integer(sid ÷ 1)
+    sec = Int(sid ÷ 1)
     fsec = sid - sec
     return h, m, sec, fsec
 end
 
 """
-    cal2jd(Y::N, M::N, D::N) where {N<:Number}
+    cal2jd(year::Integer, month::Integer, day::Integer)
 
 This function converts a given date in the Gregorian calendar (year, month, day) to the 
-Julian Date (JD).
+corresponding two-parts Julian Date. The first part is the [`DJ2000`](@ref), while the 
+second output is the number of days since [`DJ2000`](@ref).
 
-The input arguments are the Year, Month, and Day in the Gregorian calendar. 
-The year must be greater than 1583, and the month must be between 1 and 12. If the input 
-year or month is invalid, an `EpochConversionError` is thrown. The day must also be valid, 
-taking into account whether the year is a leap year. If the input day is invalid, 
-an `EpochConversionError` is thrown.
-
-The function first converts the year and month to the number of days since January 1, 
-2000 at noon (J2000). It then adds the day of the month to obtain the number of days since J2000.
-
-### Inputs
-- `Y, M, D` -- year, month and day in Gregorian calendar
-
-### Outputs
-- `j2000` -- J2000 zero point: always 2451544.5 (2000-01-01 00:00:00.0).
-- `d` -- Date from J2000 in days
+The year must be greater than 1583, and the month must be between 1 and 12. The day must 
+also be valid, taking into account whether the year is a leap year. If the input year or 
+month or day are invalid, a `DomainError` is thrown.
 
 ### Examples 
-```julia
-j2000, d = cal2jd(2021, 1, 1)
-# j2000 = 2451544.5
-# d = 730123.0
-```
+```julia-repl
+julia> cal2jd(2021, 1, 1)
+(2.4000005e6, 59215.0)
 
-```julia
-j2000, d = cal2jd(2022, 2, 28)
-# j2000 = 2451544.5
-# d = 730214.0
-```
+julia> cal2jd(2022, 2, 28)
+(2.4000005e6, 59638.0)
 
-```julia 
-j2000, d = cal2jd(2020, 2, 29)
-# EpochConversionError: invalid day provided, shall be between 1 and 29
+#TODO: add example for epoch conversion error
 ```
 
 ### References
-    
-- Explanatory Supplement to the Astronomical Almanac,
-  P. Kenneth Seidelmann (ed), University Science Books (1992),
-  Section 12.92 (p604).
-
-- Klein, A., A Generalized Kahan-Babuska-Summation-Algorithm.
-  Computing, 76, 279-293 (2006), Section 3.
-
+- Seidelmann P. K., (1992), Explanatory Supplement to the Astronomical Almanac,
+    University Science Books, Section 12.92 (p604).
+- Klein, A., (2006), A Generalized Kahan-Babuska-Summation-Algorithm.
+    Computing, 76, 279-293, Section 3.
 - [ERFA software library](https://github.com/liberfa/erfa/blob/master/src/cal2jd.c)
 """
-function cal2jd(Y::Number, M::Number, D::Number)
+function cal2jd(Y::Integer, M::Integer, D::Integer)
     # Validate year and month
     if Y < 1583
         throw(DomainError("invalid year provided, must be greater than 1583"))
@@ -150,23 +134,17 @@ function cal2jd(Y::Number, M::Number, D::Number)
     d2 = find_dayinyear(M, D, isleap)
     # compute days since 01-01-2000 at noon
     d = d1 + d2
+
     return DJ2000, d
 end
 
 """
-    calhms2jd(Y::Number, M::Number, D::Number, h::Number, m::Number, sec::Number) 
+    calhms2jd(year, month, day, hour, minute, seconds) 
 
-Convert Gregorian Calendar date and time to Julian Date.
-
-### Inputs
-- `Y, M, D` -- year, month and day in Gregorian calendar
-- `h, m, sec` -- hour, minute and second
-
-### Outputs
-- `jd1` -- J2000 zero point: always 2451545.0
-- `jd2` -- J2000 Date for 12 hrs
+Convert Gregorian Calendar date and time to a two-parts Julian Date. The first part 
+is the [`DJ2000`](@ref), while the second output is the number of days since [`DJ2000`](@ref).
 """
-function calhms2jd(Y::Number, M::Number, D::Number, h::Number, m::Number, sec::Number)
+function calhms2jd(Y::I, M::I, D::I, h::I, m::I, sec::N) where {I <: Integer, N <: Number}
     jd1, jd2 = cal2jd(Y, M, D)
     fd = hms2fd(h, m, sec)
     return jd1, jd2 + fd - 0.5
@@ -179,51 +157,41 @@ This function converts a given Julian Date (JD) to a Gregorian calendar date
 (year, month, day, and fraction of a day).
 
 The JD is composed of two input arguments, `dj1` and `dj2`, which can be apportioned in any 
-convenient way. For example, JD 2450123.7 could be expressed as `dj1=2450123.7` and `dj2=0.0`, 
-or as `dj1=2451545.0` and `dj2=-1421.3`, or in any of the other ways listed in the documentation.
+convenient way. For example, JD 2450123.7 could be expressed as `dj1 = 2450123.7` and `dj2 = 0.0`, 
+or as `dj1 = 2451545.0` and `dj2 = -1421.3`, or in any of the other ways listed in the documentation.
 
 The earliest valid date that can be converted is -4713 Jan 1, and the largest value accepted 
 is 1e9. If the input JD is outside this range, an `EpochConversionError` is thrown.
 
-### Inputs
--  `dj1,dj2` -- Julian Date (Notes 1, 2)
+!!! note
+    The Julian Date is apportioned in any convenient way between the arguments 
+    `dj1` and `dj2`. For example, `JD = 2450123.7` could be expressed in any of these 
+    ways, among others:
 
-### Outputs 
-- `Y::Integer` -- year
-- `M::Integer` -- month 
-- `D::Integer` -- day 
-- `fd::AbstractFloat` -- fraction of day 
+    | dj1       	| dj2     	|                      	|
+    |-----------	|---------	|----------------------	|
+    | 2450123.7 	| 0.0     	| (JD method)          	|
+    | 2451545.0 	| -1421.3 	| (J2000 method)       	|
+    | 2400000.5 	| 50123.2 	| (MJD method)         	|
+    | 2450123.5 	| 0.2     	| (date & time method) 	|
 
-### Notes 
-
-1. The earliest valid date is 0 (-4713 Jan 1). The largest value accepted is 1e9.
-
-2. The Julian Date is apportioned in any convenient way between the arguments 
-   `dj1` and `dj2`. For example, JD=2450123.7 could be expressed in any of these 
-   ways, among others:
-
-   | dj1       	| dj2     	|                      	|
-   |-----------	|---------	|----------------------	|
-   | 2450123.7 	| 0.0     	| (JD method)          	|
-   | 2451545.0 	| -1421.3 	| (J2000 method)       	|
-   | 2400000.5 	| 50123.2 	| (MJD method)         	|
-   | 2450123.5 	| 0.2     	| (date & time method) 	|
+!!! warning
+    The earliest valid date is 0 (-4713 Jan 1). The largest value accepted is 1e9.
 
 ### References
+- Seidelmann P. K., (1992), Explanatory Supplement to the Astronomical Almanac,
+    University Science Books, Section 12.92 (p604).
+
+- Klein, A., (2006), A Generalized Kahan-Babuska-Summation-Algorithm.
+    Computing, 76, 279-293, Section 3.
     
-- Explanatory Supplement to the Astronomical Almanac,
-  P. Kenneth Seidelmann (ed), University Science Books (1992),
-  Section 12.92 (p604).
-
-- Klein, A., A Generalized Kahan-Babuska-Summation-Algorithm.
-  Computing, 76, 279-293 (2006), Section 3.
-
 - [ERFA software library](https://github.com/liberfa/erfa/blob/master/src/jd2cal.c)
+
 """
 function jd2cal(dj1::Number, dj2::Number)
     dj = dj1 + dj2
     if dj < -68569.5 || dj > 1e9
-        throw(DomainError("invalid JD provided, shall be between -68569.5 and 1e9"))
+        throw(DomainError("Invalid JD provided, shall be between -68569.5 and 1e9"))
     end
 
     # Copy the date, big then small, and re-align to midnight
@@ -237,11 +205,11 @@ function jd2cal(dj1::Number, dj2::Number)
     d2 -= 0.5
 
     #  Separate day and fraction
-    f1 = mod(d1, 1.0)
-    f2 = mod(d2, 1.0)
-    fd = mod(f1 + f2, 1.0)
-    if fd < 0.0
-        fd += 1.0
+    f1 = mod(d1, 1)
+    f2 = mod(d2, 1)
+    fd = mod(f1 + f2, 1)
+    if fd < 0
+        fd += 1
     end
     d = round(Int, d1 - f1) + round(Int, d2 - f2) + round(Int, f1 + f2 - fd)
     jd = round(Int, d) + 1
@@ -260,22 +228,8 @@ end
 """
     jd2calhms(dj1::Number, dj2::Number)
 
-Julian Date to Gregorian year, month, day, hour, minute, seconds.
-
-### Inputs
-
--  `dj1,dj2` -- Two part Julian Date
-
-### Outputs 
-
-A `Tuple` containing:
-
-- `Y` -- year
-- `M` -- month 
-- `D` -- day 
-- `h` -- hour
-- `m` -- minute 
-- `s` -- second
+Convert a two-parts Julian Date to Gregorian year, month, day, hour, minute, seconds. See 
+[`jd2cal`](@ref) for more information on the Julian Date composition. 
 """
 function jd2calhms(dj1::Number, dj2::Number)
     y, m, d, fd = jd2cal(dj1, dj2)
@@ -286,34 +240,24 @@ end
 """
     utc2tai(utc1, utc2)
 
-Time scale transformation:  Coordinated Universal Time, [`UTC`](@ref), to 
-International Atomic Time, [`TAI`](@ref).
+Transform a 2-part (quasi) Julian Date, in days, in Coordinate Universal Time, [`UTC`](@ref) 
+to a 2-part Julian Date in the International Atomic Time, [`TAI`](@ref) scale.
 
-### Input 
+!!! note
+    `utc1 + utc2` is quasi Julian Date (see Note 2), apportioned in any
+    convenient way between the two arguments, for example such that `utc1`
+    is the Julian Day Number and `utc2` is the fraction of a day.
 
-- `utc1, utc2` --  UTC as a 2-part (quasi) Julian Date
-
-### Output
-
-- `tai1, tai2` -- TAI as a 2-part Julian Date
-
-
-### Notes 
-
-1. utc1+utc2 is quasi Julian Date (see Note 2), apportioned in any
-    convenient way between the two arguments, for example where utc1
-    is the Julian Day Number and utc2 is the fraction of a day.
-
-2. JD cannot unambiguously represent UTC during a leap second unless
+!!! note
+    JD cannot unambiguously represent UTC during a leap second unless
     special measures are taken.  The convention in the present
     function is that the JD day represents UTC days whether the
     length is 86399, 86400 or 86401 SI seconds.  
 
 ### References
     
-- Explanatory Supplement to the Astronomical Almanac,
-    P. Kenneth Seidelmann (ed), University Science Books (1992),
-    Section 12.92 (p604).
+- Seidelmann P. K., (1992), Explanatory Supplement to the Astronomical Almanac,
+    University Science Books, Section 12.92 (p604).
 
 - McCarthy, D. D., Petit, G. (eds.), IERS Conventions (2003),
     IERS Technical Note No. 32, BKG (2004)
@@ -363,36 +307,25 @@ end
 """
     tai2utc(tai1, tai2)
 
-Time scale transformation:  International Atomic Time, [`TAI`](@ref) to 
-Coordinated Universal Time, [`UTC`](@ref).
-.
+Transform a 2-part (quasi) Julian Date, in days, in International Atomic Time, [`TAI`](@ref) 
+to a 2-part Julian Date in the Coordinated Universal Time, [`UTC`](@ref), scale.
 
-### Input 
+!!! note
+    `tai1 + tai2` is Julian Date, apportioned in any convenient way
+    between the two arguments, for example such that `tai1` is the Julian
+    Day Number and `tai2` is the fraction of a day.  The returned `utc1` 
+    and `utc2` form an analogous pair.
 
-- `tai1, tai2` -- TAI as a 2-part Julian Date
-
-### Output
-
-- `utc1, utc2` --  UTC as a 2-part (quasi) Julian Date
-
-
-### Notes 
-
-1. tai1+tai2 is Julian Date, apportioned in any convenient way
-    between the two arguments, for example where tai1 is the Julian
-    Day Number and tai2 is the fraction of a day.  The returned utc1 
-    and utc2 form an analogous pair.
-
-2. JD cannot unambiguously represent UTC during a leap second unless
+!!! note
+    JD cannot unambiguously represent UTC during a leap second unless
     special measures are taken.  The convention in the present
     function is that the JD day represents UTC days whether the
     length is 86399, 86400 or 86401 SI seconds.  
 
 ### References
     
-- Explanatory Supplement to the Astronomical Almanac,
-    P. Kenneth Seidelmann (ed), University Science Books (1992),
-    Section 12.92 (p604).
+- Seidelmann P. K., (1992), Explanatory Supplement to the Astronomical Almanac,
+    University Science Books, Section 12.92 (p604).
 
 - McCarthy, D. D., Petit, G. (eds.), IERS Conventions (2003),
     IERS Technical Note No. 32, BKG (2004)

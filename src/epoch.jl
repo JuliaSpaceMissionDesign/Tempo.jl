@@ -92,14 +92,14 @@ Epoch(e::Epoch) = e
 Epoch{S,T}(e::Epoch{S,T}) where {S,T} = e
 
 """
-    Epoch(s::AbstractString, scale::S) where {S<:AbstractTimeScale}
+    Epoch(s::AbstractString, scale::AbstractTimeScale)
 
 Construct an `Epoch` from a `str` in the [`AbstractTimeScale`](@ref) (`scale`). 
 
 !!! note 
     This constructor requires that the `str` is in the format `yyyy-mm-ddTHH:MM:SS.sss`.
 """
-function Epoch(s::AbstractString, scale::S) where {S<:AbstractTimeScale}
+function Epoch(s::AbstractString, scale::AbstractTimeScale)
     y, m, d, H, M, sec, sf = parse_iso(s)
     _, jd2 = calhms2jd(y, m, d, H, M, sec + sf)
     return Epoch(jd2 * 86400, scale)
@@ -199,27 +199,19 @@ end
 # ----
 # Operations
 
-function Base.:-(e1::Epoch{S}, e2::Epoch{S}) where {S}
-    return e1.seconds - e2.seconds
-end
+Base.:-(e1::Epoch{S}, e2::Epoch{S}) where {S} = e1.seconds - e2.seconds
 
-function Base.:+(e::Epoch, x::N) where {N<:Number}
-    return Epoch(e.seconds + x, timescale(e))
-end
-function Base.:-(e::Epoch, x::N) where {N<:Number}
-    return Epoch(e.seconds - x, timescale(e))
-end
+Base.:+(e::Epoch, x::Number) = Epoch(e.seconds + x, timescale(e))
+Base.:-(e::Epoch, x::Number) = Epoch(e.seconds - x, timescale(e))
 
-function (::Base.Colon)(start::Epoch, step::T, stop::Epoch) where {T<:AbstractFloat}
+function (::Base.Colon)(start::Epoch, step::AbstractFloat, stop::Epoch)
     step = start < stop ? step : -step
     return StepRangeLen(start, step, floor(Int64, (stop - start) / step) + 1)
 end
 
 (::Base.Colon)(start::Epoch, stop::Epoch) = (:)(start, 86400.0, stop)
 
-function Base.isless(e1::Epoch{S}, e2::Epoch{S}) where {S}
-    return value(e1) < value(e2)
-end
+Base.isless(e1::Epoch{S}, e2::Epoch{S}) where {S} = value(e1) < value(e2)
 
 function Base.isapprox(e1::Epoch{S}, e2::Epoch{S}; kwargs...) where {S}
     return isapprox(value(e1), value(e2); kwargs...)

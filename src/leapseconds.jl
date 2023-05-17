@@ -1,10 +1,11 @@
 """
     get_leapseconds()
 
-Parse leapseconds data and return a `Leapseconds` type. 
+Parse leapseconds data and return a [`Leapseconds`](@ref) type. 
 
-The leapsecond kernel is retrieved from the artifacts of this package. This artifact will 
-be updated whenever a new leapsecond is added.
+!!! note 
+    The leapsecond kernel is retrieved from the artifacts of this package. This artifact 
+    will be updated whenever a new leapsecond is added.
 """
 function get_leapseconds()
     t = Vector{Float64}()
@@ -32,20 +33,11 @@ Stores information about leap seconds that have been added to Coordinated Univer
 since the start of the year 2000.
 
 ### Fields
-- `lastupdate`: a `DatesDateTime` object representing the date and time when the Leapseconds struct was last updated.
-- `jd2000`: a Vector of type T that stores the Julian Date (JD) of each leap second.
-- `leap`: a Vector of type T that stores the number of leap seconds that have been added at each corresponding JD in the jd2000 field.
-
-### Example
-
-```julia
-jd2000 = [2000.5, 2000.75]
-leap = [1, 2]
-ls = Leapseconds{Float64}(now(), jd2000, leap)
-```
-This code creates a new `Leapseconds` object ls, with the current date and time as the 
-`lastupdate`, and the `jd2000` and `leap` fields set to the given values. This means that 
-1 leap second was added at JD 2000.5 and 2 leap seconds were added at JD 2000.75.
+- `lastupdate`: a `DatesDateTime` object representing the date and time when the Leapseconds 
+    struct was last updated.
+- `jd2000`: a vector storing the Julian Date, in days since J2000, of each leap second.
+- `leap`: a vector storing the number of leap seconds at each corresponding entry of the 
+        `jd2000` field.
 """
 struct Leapseconds{T}
     lastupdate::DatesDateTime
@@ -67,7 +59,7 @@ const LEAPSECONDS::Leapseconds{Float64} = get_leapseconds()
 """
     leapseconds(jd2000::Number)
 
-For a given UTC date, in Julian days since [`J2000`](@ref) calculate Delta(AT) = TAI - UTC.
+For a given UTC date, in Julian days since [`J2000`](@ref), calculate Delta(AT) = TAI - UTC.
 """
 function leapseconds(jd2000::Number)
     return LEAPSECONDS.leap[searchsortedlast(LEAPSECONDS.jd2000, jd2000)]
