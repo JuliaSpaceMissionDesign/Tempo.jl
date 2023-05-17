@@ -32,6 +32,7 @@ end
 Convert hours, minutes and seconds to day fraction.
 """
 function hms2fd(h::Integer, m::Integer, s::Number)
+
     # Validate arguments
     if h < 0 || h > 23
         throw(DomainError("invalid hour provided, must be between 0 and 23"))
@@ -44,7 +45,9 @@ function hms2fd(h::Integer, m::Integer, s::Number)
             ),
         )
     end
+
     return ((60 * (60 * h + m)) + s) / 86400
+
 end
 
 """
@@ -53,6 +56,7 @@ end
 Convert the day fraction `fd` to hour, minute and seconds.
 """
 function fd2hms(fd::Number)
+
     secinday = fd * 86400
     if secinday < 0 || secinday > 86400
         throw(
@@ -61,11 +65,14 @@ function fd2hms(fd::Number)
             ),
         )
     end
+
     hours = Int(secinday ÷ 3600)
     secinday -= 3600 * hours
     mins = Int(secinday ÷ 60)
     secinday -= 60 * mins
+
     return hours, mins, secinday
+
 end
 
 """
@@ -74,10 +81,13 @@ end
 Convert the day fraction `fd` to hour, minute, second and fraction of seconds.
 """
 function fd2hmsf(fd::Number)
+
     h, m, sid = fd2hms(fd)
     sec = Int(sid ÷ 1)
     fsec = sid - sec
+
     return h, m, sec, fsec
+
 end
 
 """
@@ -145,9 +155,12 @@ Convert Gregorian Calendar date and time to a two-parts Julian Date. The first p
 is the [`DJ2000`](@ref), while the second output is the number of days since [`DJ2000`](@ref).
 """
 function calhms2jd(Y::I, M::I, D::I, h::I, m::I, sec::N) where {I <: Integer, N <: Number}
+    
     jd1, jd2 = cal2jd(Y, M, D)
     fd = hms2fd(h, m, sec)
+
     return jd1, jd2 + fd - 0.5
+
 end
 
 """ 
@@ -189,6 +202,7 @@ is 1e9. If the input JD is outside this range, an `EpochConversionError` is thro
 
 """
 function jd2cal(dj1::Number, dj2::Number)
+
     dj = dj1 + dj2
     if dj < -68569.5 || dj > 1e9
         throw(DomainError("Invalid JD provided, shall be between -68569.5 and 1e9"))
@@ -222,7 +236,9 @@ function jd2cal(dj1::Number, dj2::Number)
     D = mod(h, 153) ÷ 5 + 1
     M = mod(h ÷ 153 + 2, 12) + 1
     Y = e ÷ 1461 - 4716 + (12 + 2 - M) ÷ 12
+
     return Y, M, D, fd
+
 end
 
 """
@@ -232,9 +248,12 @@ Convert a two-parts Julian Date to Gregorian year, month, day, hour, minute, sec
 [`jd2cal`](@ref) for more information on the Julian Date composition. 
 """
 function jd2calhms(dj1::Number, dj2::Number)
+
     y, m, d, fd = jd2cal(dj1, dj2)
     h, min, sec = fd2hms(fd)
+
     return y, m, d, h, min, sec
+
 end
 
 """
@@ -301,7 +320,9 @@ function utc2tai(utc1, utc2)
         tai1 = a2
         tai2 = u1
     end
+
     return tai1, tai2
+
 end
 
 """
@@ -333,6 +354,7 @@ to a 2-part Julian Date in the Coordinated Universal Time, [`UTC`](@ref), scale.
 - [ERFA software library](https://github.com/liberfa/erfa/blob/master/src/taiutc.c)
 """
 function tai2utc(tai1, tai2)
+
     # Put the two parts of the UTC into big-first order
     big1 = abs(tai1) >= abs(tai2)
     if big1
@@ -361,7 +383,9 @@ function tai2utc(tai1, tai2)
         utc1 = u2
         utc2 = u1
     end
+
     return utc1, utc2
+    
 end
 
 """

@@ -82,10 +82,13 @@ function Base.show(io::IO, ep::Epoch)
 end
 
 function DateTime(ep::Epoch)
+
     y, m, d, H, M, S = jd2calhms(DJ2000, ep.seconds / DAY2SEC)
     fint = floor(Int64, S)
     f = S - fint
+
     return DateTime(y, m, d, H, M, fint, f)
+    
 end
 
 Epoch(e::Epoch) = e

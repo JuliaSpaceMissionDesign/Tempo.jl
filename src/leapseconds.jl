@@ -8,6 +8,7 @@ Parse leapseconds data and return a [`Leapseconds`](@ref) type.
     will be updated whenever a new leapsecond is added.
 """
 function get_leapseconds()
+    
     t = Vector{Float64}()
     leap = Vector{Float64}()
     re = r"(?<dat>[0-9]{2}),\s+@(?<date>[0-9]{4}-[A-Z]{3}-[0-9])"
@@ -23,7 +24,9 @@ function get_leapseconds()
             push!(t, datetime2julian(DatesDateTime(m["date"], "y-u-d")) - Tempo.DJ2000)
         end
     end
+
     return Leapseconds(now(), t, leap)
+
 end
 
 """

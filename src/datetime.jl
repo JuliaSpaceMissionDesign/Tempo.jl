@@ -145,11 +145,13 @@ in days.
 j2000(d::Date) = j2000(cal2jd(d)...)
 
 function Date(offset::Integer)
+
     year = find_year(offset)
     dayinyear = offset - lastj2000dayofyear(year - 1)
     ly = isleapyear(year)
     month = find_month(dayinyear, ly)
     day = find_day(dayinyear, month, ly)
+
     return Date(year, month, day)
 end
 
@@ -157,9 +159,11 @@ function Date(year::Integer, dayinyear::Integer)
     if dayinyear <= 0
         throw(DomainError("day in year must me ≥ than 0! $dayinyear provided."))
     end
+
     ly = isleapyear(year)
     month = find_month(dayinyear, ly)
     day = find_day(dayinyear, month, ly)
+
     return Date(year, month, day)
 end
 
@@ -208,6 +212,7 @@ struct Time{T}
     minute::Int
     second::Int
     fraction::T
+
     function Time(
         hour::Integer, minute::Integer, second::Integer, fraction::T
     ) where {T <: AbstractFloat}
@@ -220,6 +225,7 @@ struct Time{T}
         elseif fraction < 0 || fraction > 1
             throw(DomainError("`fraction` must be a number between 0 and 1."))
         end
+
         return new{T}(hour, minute, second, fraction)
     end
 end
@@ -237,10 +243,12 @@ function Time(secondinday::Integer, fraction::Number)
             ),
         )
     end
+
     hour = secondinday ÷ 3600
     secondinday -= 3600 * hour
     minute = secondinday ÷ 60
     secondinday -= 60 * minute
+
     return Time(hour, minute, secondinday, fraction)
 end
 
@@ -403,26 +411,37 @@ end
 function DateTime(
     year::N, month::N, day::N, hour::N, min::N, sec::N, frac::T=0.0
 ) where {N<:Integer,T<:AbstractFloat}
+
     return DateTime(Date(year, month, day), Time(hour, min, sec, frac))
+    
 end
 
 function DateTime(s::AbstractString)
+
     length(split(s)) != 1 && throw(error("[Tempo] cannot parse $s as `DateTime`."))
     dy, dm, dd, th, tm, ts, tms = parse_iso(s)
+
     return DateTime(dy, dm, dd, th, tm, ts, tms)
+
 end
 
 function DateTime(seconds::Number)
+
     y, m, d, H, M, Sf = jd2calhms(DJ2000, seconds / DAY2SEC)
     s = floor(Int64, Sf)
+
     return DateTime(y, m, d, H, M, s, Sf - s)
+
 end
 
 function DateTime(d::Date, sec::Number)
+
     jd1 = j2000(d) + sec / DAY2SEC
     y, m, d, H, M, Sf = jd2calhms(DJ2000, jd1)
     s = floor(Int64, Sf)
+
     return DateTime(y, m, d, H, M, s, Sf - s)
+
 end
 
 Date(dt::DateTime) = dt.date
