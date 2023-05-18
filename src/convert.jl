@@ -27,6 +27,61 @@ function find_dayinyear(month::Integer, day::Integer, isleap::Bool)
 end
 
 """
+    find_year(d::Integer)
+
+Return the Gregorian year associated to the given Julian Date day `d`.
+"""
+function find_year(d::Integer)
+    
+    j2d = ifelse(d isa Int32, widen(d), d)
+    year = (400 * j2d + 292194288) ÷ 146097
+
+    # FIXME: ma questa quindi è la julian date rispetto a J2000 vero? 
+    # da aggiornare docs in caso 
+
+    # The previous estimate is one unit too high in some rare cases
+    # (240 days in the 400 years gregorian cycle, about 0.16%)
+    if j2d <= lastj2000dayofyear(year - 1)
+        year -= 1
+    end
+
+    return year
+end
+
+"""
+    find_month(dayinyear::Integer, isleap::Bool)
+
+Find the month from the day of the year, depending on whether the year is leap or not.
+"""
+function find_month(dayinyear::Integer, isleap::Bool)
+    offset = ifelse(isleap, 313, 323)
+    return ifelse(dayinyear < 32, 1, (10 * dayinyear + offset) ÷ 306)
+end
+
+"""
+    find_day(dayinyear::Integer, month::Integer, isleap::Bool)
+
+Find the day of the month from the day in the year and the month, depending on whether the 
+year is leap or not.
+"""
+function find_day(dayinyear::Integer, month::Integer, isleap::Bool)
+    
+    (!isleap && dayinyear > 365) && throw(
+        DomainError(dayinyear, " the day cannot be greater than 366 for a non-leap year."),
+    )
+    previous_days = ifelse(isleap, PREVIOUS_MONTH_END_DAY_LEAP, PREVIOUS_MONTH_END_DAY)
+    return dayinyear - previous_days[month]
+end
+
+""" 
+    lastj2000dayofyear(year::Integer)
+"""
+function lastj2000dayofyear(year::Integer)
+    # FIXME: da documentare la roba che fa questa qua
+    return 365 * year + year ÷ 4 - year ÷ 100 + year ÷ 400 - 730120
+end
+
+"""
     hms2fd(hour::Integer, minute::Integer, second::Number)
 
 Convert hours, minutes and seconds to day fraction.
