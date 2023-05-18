@@ -26,5 +26,5 @@ For further information on this package please refer to the [stable documentatio
 If you found this package useful, please consider starring the repository. We also encourage 
 you to take a look at other astrodynamical packages of the [JSMD](https://github.com/JuliaSpaceMissionDesign/) organisation.
 
-## Acknoledgments 
+## Acknowledgments 
 The authors would like to acknowledge the developers of [AstroTime.jl](https://github.com/JuliaAstro/AstroTime.jl) which inspired and provided many usefull tips for the realisation of this package.
