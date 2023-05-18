@@ -1,4 +1,10 @@
-export TIMESCALES, @timescale, add_timescale!, TimeSystem
+export TIMESCALES, 
+    @timescale, 
+    add_timescale!, 
+    TimeSystem,
+    timescale_alias, 
+    timescale_name, 
+    timescale_id
 
 """
     TimeScaleNode{T} <: AbstractGraphNode 
@@ -52,10 +58,16 @@ julia> ts = TimeSystem{Float64}();
 
 julia> @timescale TSA 100 TimeScaleA
 
+julia> @timescale TSB 200 TimeScaleB
+
 julia> add_timescale!(ts, TSA)
 
-# TODO: finish this example
-````
+julia> offset_tsa2tsb(seconds) = 1.0
+
+julia> offset_tsb2tsa(seconds) = -1.0
+
+julia> add_timescale!(ts, TSB, offset_tsa2tsb; parent=TSA, ftp=offset_tsb2tsa)
+```
 
 ### See also 
 See also [`@timescale`](@ref) and [`add_timescale!`](@ref).
@@ -126,10 +138,11 @@ Create a new timescale instance to alias the given `id`. This macro creates an
 is obtained by appending `TimeScale` to `name` if it was not provided.
 
 ### Examples 
-```julia-repl 
+```julia-repl
 julia> @timescale NTS 100 NewTimeScale 
 
 julia> typeof(NTS)
+NewTimeScale 
 
 julia> timescale_alias(NTS)
 100
@@ -137,6 +150,7 @@ julia> timescale_alias(NTS)
 julia> @timescale TBH 200
 
 julia> typeof(TBH)
+TBHTimeScale
 
 julia> timescale_alias(TBH)
 200
@@ -368,9 +382,6 @@ See also [`@timescale`](@ref), [`TimeScaleNode`](@ref) and [`add_timescale`](@re
 ```
 """
 const TIMESCALES::TimeSystem{Float64} = TimeSystem{Float64}()
-
-
-# FIXME: eventually remove me if the above buit works TIMESCALES
 
 # Populate the default time scales graph
 add_timescale!(TIMESCALES, TT, _zero_offset)
