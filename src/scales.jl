@@ -1,5 +1,17 @@
-export TIMESCALES, @timescale, add_timescale, TimeSystem
+export TIMESCALES, @timescale, add_timescale!, TimeSystem
 
+"""
+    TimeScaleNode{T} <: AbstractGraphNode 
+
+Define a timescale.
+
+### Fields 
+- `name` -- timescale name
+- `id` -- timescale identification number (ID)
+- `parentid` -- ID of the parent timescale
+- `ffp` -- offest function from the parent timescale
+- `ftp` -- offset function to the parent timescale
+"""
 struct TimeScaleNode{T} <: AbstractGraphNode
     name::Symbol
     id::Int
@@ -17,38 +29,129 @@ function Base.show(io::IO, s::TimeScaleNode{T}) where {T}
     return println(io, pstr)
 end
 
-struct TimeSystem{T<:Number}
+# -------------------------------------
+# TIMESYSTEM
+# -------------------------------------
+
+""" 
+    TimeSystem{T}
+
+A `TimeSystem` object manages a collection of default and user-defined [`TimeScaleNode`](@ref)
+objects, enabling efficient time transformations between them. It leverages a 
+[`MappedDiGraph`](@ref) to keep track of the relationships between the timescales.
+
+---
+
+    TimeSystem{T}()
+
+Create a empty `TimeSystem` object with datatype `T`.
+
+### Examples 
+```julia-repl
+julia> ts = TimeSystem{Float64}();
+
+julia> @timescale TSA 100 TimeScaleA
+
+julia> add_timescale!(ts, TSA)
+
+# TODO: finish this example
+````
+
+### See also 
+See also [`@timescale`](@ref) and [`add_timescale!`](@ref).
+
+"""
+struct TimeSystem{T<:Number}    
     scales::MappedNodeGraph{TimeScaleNode{T},SimpleDiGraph{Int}}
-    function TimeSystem{T}() where {T}
-        return new(MappedDiGraph(TimeScaleNode{T}))
-    end
+end
+
+function TimeSystem{T}() where {T}
+    return TimeSystem(MappedDiGraph(TimeScaleNode{T}))
 end
 
 """
-AbstractTimeScale
+    add_timescale!(s::TimeSystem, ts::TimeScaleNode)
+
+Register a new node in the `TimeSystem`.
+
+!!! warning 
+    This is a low-level function and should not be called by the user.
+"""
+function add_timescale!(s::TimeSystem{T}, ts::TimeScaleNode{T}) where {T}
+    return add_vertex!(s.scales, ts)
+end
+
+@inline has_timescale(s::TimeSystem, sid::Int) = has_vertex(s.scales, sid)
+
+@inline timescales(s::TimeSystem) = s.scales
+
+# -------------------------------------
+# TIMESCALE
+# -------------------------------------
+
+"""
+    AbstractTimeScale
 
 All timescales are subtypes of the abstract type `AbstractTimeScale`.
 """
 abstract type AbstractTimeScale end
 
-timescale_alias(s::AbstractTimeScale) = timescale_id(s)
+"""
+    timescale_alias(scale::AbstractTimeScale)
+
+Return the ID associated to `scale`.
+"""
+@inline timescale_alias(s::AbstractTimeScale) = timescale_id(s)
 timescale_alias(s::Int) = s
+
+"""
+    timescale_id(scale::AbstractTimeScale)
+
+Return the ID of `scale`.
+"""
 timescale_id(::AbstractTimeScale) = nothing
+
+""" 
+    timescale_name(scale::AbstractTimeScale)
+
+Return the name of `scale`.
+"""
 timescale_name(::AbstractTimeScale) = nothing
 
 """
     @timescale(name, id, type)
 
-Create an `AbstractTimeScale` instance to alias the given `id`.
+Create a new timescale instance to alias the given `id`. This macro creates an 
+[`AbstractTimeScale`](@ref) subtype and its singleton instance called `name`. Its `type` 
+is obtained by appending `TimeScale` to `name` if it was not provided.
 
-### Inputs 
-- `name` -- Acronym to denote the new time scale 
-- `id` -- Integer whose alias is the new time scale 
-- `type` -- Name of the type representing the new time scale 
+### Examples 
+```julia-repl 
+julia> @timescale NTS 100 NewTimeScale 
+
+julia> typeof(NTS)
+
+julia> timescale_alias(NTS)
+100
+
+julia> @timescale TBH 200
+
+julia> typeof(TBH)
+
+julia> timescale_alias(TBH)
+200
+```
+
+### See also 
+See also [`timescale_alias`](@ref) and [`add_timescale!`](@ref).
 """
-macro timescale(name::Symbol, id::Int, type::Symbol)
+macro timescale(name::Symbol, id::Int, type::Union{Symbol, Nothing}=nothing)
+
+    # construct the type name if it was not assigned.
+    type = isnothing(type) ? Symbol(name, :TimeScale) : type
     type = Symbol(format_camelcase(Symbol, String(type)))
     type_str = String(type)
+
     name_split = join(split(type_str, r"(?=[A-Z])"), " ")
     name_str = String(name)
 
@@ -58,7 +161,7 @@ macro timescale(name::Symbol, id::Int, type::Symbol)
 
     return quote
         """
-            $($type_str)
+            $($type_str) <: AbstractTimeScale
 
         A type representing the $($name_split) ($($name_str)) time scale.
         """
@@ -84,85 +187,92 @@ function _zero_offset(seconds::T) where {T}
     return T(0.0)
 end
 
+""" 
+    add_timescale!(system::TimeSystem, scale::AbstractTimeScale)
+
 """
-    add_vertex!(s::TimeSystem, ts::TimeScaleNode)
+function add_timescale!(
+    ts::TimeSystem{T}, 
+    scale::AbstractTimeScale, 
+    ffp::Function=_zero_offset;
+    ftp=nothing, 
+    parent=nothing
+) where {T}
 
-Register a new node in the `TimeSystem`.
-"""
-function add_vertex!(s::TimeSystem{T}, ts::TimeScaleNode{T}) where {T}
-    return add_vertex!(s.scales, ts)
-end
-
-@inline has_timescale(s::TimeSystem, sid::Int) = has_vertex(s.scales, sid)
-
-function add_timescale(
-    scales::TimeSystem{T}, ts::S, ffp::Function=_zero_offset; ftp=nothing, parent=nothing
-) where {T,S<:AbstractTimeScale}
-    name, id = Tempo.timescale_name(ts), Tempo.timescale_id(ts)
+    name = Tempo.timescale_name(scale)
+    id   = Tempo.timescale_id(scale)
+    
     pid = isnothing(parent) ? nothing : timescale_alias(parent)
 
-    if has_timescale(scales, id)
+    if has_timescale(ts, id)
         # Check if a set of timescale with the same ID is already registered within 
         # the given time system 
         throw(
-            ErrorException(
+            ArgumentError(
                 "TimeScale with id $id is already registered in the given TimeSystem"
-            ),
+            )
         )
     end
 
-    if name in map(x -> x.name, scales.scales.nodes)
-        # Check if timescale with the same name also does not already exist
+    # Check if timescale with the same name also does not already exist
+    if name in map(x -> x.name, timescales(ts).nodes)
         throw(
-            ErrorException(
+            ArgumentError(
                 "TimeScale with name $name is already registered in the given TimeSystem"
-            ),
+            )
         )
     end
 
-    # if the scale has a parent
-    if !isnothing(parent)
-        # Check if the root axes is not present
-        isempty(scales.scales) && throw(ErrorException("[Tempo] missing root timescale"))
-
-        # Check if the parent scale are registered in system
-        if !has_timescale(scales, pid)
+    if isnothing(parent)
+        # If a root-timescale exists, check that a parent has been specified 
+        if !isempty(timescales(ts))
             throw(
-                ErrorException(
-                    "the specified parent timescale with id $pid is not " *
+                ArgumentError(
+                    "a parent timescale is required because the given TimeSystem already "*
+                    "contains a root timescale."
+                )
+            )
+        end 
+
+        pid = id  # Root-timescale has parent id = ID 
+
+    else 
+
+        # Check that the parent scale is registered in the time system 
+        if !has_timescale(ts, pid)
+            throw(
+                ArgumentError(
+                    "the specified parent timescale with ID $pid is not " *
                     "registered in the given TimeSystem",
-                ),
+                )
             )
         end
-    else
-        if !isempty(scales.scales)
-            throw(ErrorException("TimeSystem has already a root point!"))
-        end
-        pid = id
     end
 
-    # Create a new node 
+    # Create a new timescale node 
     tsnode = TimeScaleNode{T}(name, id, pid, ffp, isnothing(ftp) ? _zero_offset : ftp)
 
     # Insert the new timescale in the graph
-    add_vertex!(scales, tsnode)
+    add_timescale!(ts, tsnode)
 
     # Connect
     if !isnothing(parent)
-        # add transformation from parent to new timescale
-        add_edge!(scales.scales, pid, id)
+        # add transformation from the parent to the new timescale
+        add_edge!(timescales(ts), pid, id)
+
         if !isnothing(ftp)
-            # add the transformation from new timescale to parent 
-            add_edge!(scales.scales, id, pid)
+            # add the transformation from the new timescale to the parent 
+            add_edge!(timescales(ts), id, pid)
         end
     end
 end
 
+
 function apply_offsets(
-    scales::TimeSystem{N}, sec::Number, from::S1, to::S2
-) where {N<:Number,S1<:AbstractTimeScale,S2<:AbstractTimeScale}
-    return apply_offsets(
-        scales, sec, get_path(scales.scales, timescale_alias(from), timescale_alias(to))
+    ts::TimeSystem, sec::Number, from::AbstractTimeScale, to::AbstractTimeScale
+)
+    apply_offsets(
+        ts, sec, get_path(timescales(ts), timescale_alias(from), timescale_alias(to))
     )
 end
 
@@ -205,6 +315,11 @@ end
     return sec
 end
 
+
+# -------------------------------------
+# DEFAULT TIMESYSTEM and SCALES
+# -------------------------------------
+
 const TIMESCALES_NAMES = (
     :TerrestrialTime,
     :InternationalAtomicTime,
@@ -226,15 +341,14 @@ for i in eachindex(TIMESCALES_ACRONYMS)
     end
 end
 
-const TIMESCALES::TimeSystem{Float64} = TimeSystem{Float64}()
-
 """
     TIMESCALES
 
-Time scales graph, containing at least: $(String.(TIMESCALES_ACRONYMS))
+Default time scales graph, containing at least: $(String.(TIMESCALES_ACRONYMS))
 
-It can be easily extended using the `@timescale` to create new `TimeScaleNode` aliases and 
-`add_timescale` method to define its relation with the other nodes in the graph. 
+It can be easily extended using the [`@timescale`](@ref) to create new [`TimeScaleNode`](@ref) 
+aliases and [`add_timescale!`](@ref) method to define its relation with the other nodes 
+in the graph. 
 
 ### Example
 
@@ -247,17 +361,23 @@ offset_ffp(seconds) = 1.0
 offset_ftp(seconds) = -1.0
 
 # connect to the graph, with the parent node (TDB in this example)
-add_timescale(TIMESCALES, NTS, offset_ffp, parent=TDB, ftp=offset_ftp)
+add_timescale!(TIMESCALES, NTS, offset_ffp, parent=TDB, ftp=offset_ftp)
+
+### See also 
+See also [`@timescale`](@ref), [`TimeScaleNode`](@ref) and [`add_timescale`](@ref).
 ```
 """
-TIMESCALES
+const TIMESCALES::TimeSystem{Float64} = TimeSystem{Float64}()
 
-# Create time scales graph
-add_timescale(TIMESCALES, TT, _zero_offset)
-add_timescale(TIMESCALES, TDB, offset_tt2tdb; parent=TT, ftp=offset_tdb2tt)
-add_timescale(TIMESCALES, TAI, offset_tt2tai; parent=TT, ftp=offset_tai2tt)
-add_timescale(TIMESCALES, TCG, offset_tt2tcg; parent=TT, ftp=offset_tcg2tt)
-add_timescale(TIMESCALES, TCB, offset_tdb2tcb; parent=TDB, ftp=offset_tcb2tdb)
-add_timescale(TIMESCALES, UTC, offset_tai2utc; parent=TAI, ftp=offset_utc2tai)
-add_timescale(TIMESCALES, TDBH, offset_tt2tdbh; parent=TT)
-add_timescale(TIMESCALES, GPS, offset_gps2tai; parent=TAI, ftp=offset_tai2gps)
+
+# FIXME: eventually remove me if the above buit works TIMESCALES
+
+# Populate the default time scales graph
+add_timescale!(TIMESCALES, TT, _zero_offset)
+add_timescale!(TIMESCALES, TDB, offset_tt2tdb; parent=TT, ftp=offset_tdb2tt)
+add_timescale!(TIMESCALES, TAI, offset_tt2tai; parent=TT, ftp=offset_tai2tt)
+add_timescale!(TIMESCALES, TCG, offset_tt2tcg; parent=TT, ftp=offset_tcg2tt)
+add_timescale!(TIMESCALES, TCB, offset_tdb2tcb; parent=TDB, ftp=offset_tcb2tdb)
+add_timescale!(TIMESCALES, UTC, offset_tai2utc; parent=TAI, ftp=offset_utc2tai)
+add_timescale!(TIMESCALES, TDBH, offset_tt2tdbh; parent=TT)
+add_timescale!(TIMESCALES, GPS, offset_gps2tai; parent=TAI, ftp=offset_tai2gps)
