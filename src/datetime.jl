@@ -12,57 +12,14 @@ export Date,
     second,
     DateTime
 
-function lastj2000dayofyear(year::Integer)
-    return 365 * year + year ÷ 4 - year ÷ 100 + year ÷ 400 - 730120
-end
-
-"""
-    find_year(d::Integer)
-
-Return the Gregorian year associated to the given Julian Date day `d`.
-"""
-function find_year(d::Integer)
-    j2d = ifelse(d isa Int32, widen(d), d)
-    year = (400 * j2d + 292194288) ÷ 146097
-    
-    # The previous estimate is one unit too high in some rare cases
-    # (240 days in the 400 years gregorian cycle, about 0.16%)
-    if j2d <= lastj2000dayofyear(year - 1)
-        year -= 1
-    end
-
-    return year
-end
-
-"""
-    find_month(dayinyear::Integer, isleap::Bool)
-
-Find the month from the day of the year, depending on whether the year is leap or not.
-"""
-function find_month(dayinyear::Integer, isleap::Bool)
-    offset = ifelse(isleap, 313, 323)
-    return ifelse(dayinyear < 32, 1, (10 * dayinyear + offset) ÷ 306)
-end
-
-"""
-    find_day(dayinyear::Integer, month::Integer, isleap::Bool)
-
-Find day from the day in the year, the month and using if the year is leap or not.
-"""
-function find_day(dayinyear::Integer, month::Integer, isleap::Bool)
-    
-    (!isleap && dayinyear > 365) && throw(
-        DomainError("[Tempo] day of year cannot greater than 366 for a non-leap year."),
-    )
-    previous_days = ifelse(isleap, PREVIOUS_MONTH_END_DAY_LEAP, PREVIOUS_MONTH_END_DAY)
-    return dayinyear - previous_days[month]
-end
-
-
+# -------------------------------------
+# DATE
+# -------------------------------------
 
 """
     Date
-Type to represent a calendar date.
+
+A type to represent a calendar date.
 
 ### Fields
 
@@ -70,19 +27,60 @@ Type to represent a calendar date.
 - `month` -- month 
 - `day` -- day
 
-### Constructors 
+---
 
-- `Date(year::N, month::N, day::N)` -- is the default constructor.
+    Date(year::Int, month::Int, day::Int)
 
-- `Date(offset::N) where {N<:Integer}` -- initialize from **integer** day 
-    offset from `2000-01-01`.
+Construct a `Date` object given the `year`, `month` and `day`.
 
-- `Date(d::Date, offset::N) where {N<:Integer}` -- day offset from `d`.
+### Examples 
 
-- `Date(year::N, dayinyear::N) where {N<:Integer}` -- initialize giving the 
-    year and the day of the year.
+```julia-repl
+julia> date = Date(2023, 5, 18)
+2023-05-18
+```
 
-- `Date(dt::DateTime)` -- extract date from [`DateTime`](@ref) objects.
+---
+
+    Date(offset::Integer)
+
+Create a `Date` object given an integer number of days since `2000-01-01`.
+
+### Examples 
+
+```julia-repl 
+julia> Date(365)
+2000-12-31
+
+julia> Date(366)
+2001-01-01
+```
+
+---
+
+    Date(year::Integer, dayinyear::Integer)
+
+Create a `Date` object given the `year` and the day of the year `dayinyear`.
+
+### Examples 
+
+```julia-repl 
+julia> Date(2020, 1)
+2020-01-01
+
+julia> Date(2020, 300)
+2020-10-26
+```
+
+--- 
+
+    Date(dt::DateTime)
+
+Extract the `Date` object from a [`DateTime`](@ref) structure. 
+
+
+### See also 
+See also [`Time`](@ref) and [`DateTime`](@ref).
 """
 struct Date
     year::Int
@@ -90,26 +88,52 @@ struct Date
     day::Int
 end
 
+function Date(offset::Integer)
+
+    year = find_year(offset)
+    dayinyear = offset - lastj2000dayofyear(year - 1)
+    ly = isleapyear(year)
+
+    month = find_month(dayinyear, ly)
+    day = find_day(dayinyear, month, ly)
+
+    return Date(year, month, day)
+end
+
+function Date(year::Integer, dayinyear::Integer)
+    if dayinyear <= 0
+        throw(DomainError("day in year must me ≥ than 0! $dayinyear provided."))
+    end
+
+    ly = isleapyear(year)
+    month = find_month(dayinyear, ly)
+    day = find_day(dayinyear, month, ly)
+
+    return Date(year, month, day)
+end
+
+Date(d::Date, offset::Integer) = Date(convert(Int, j2000(d)) + offset)
+
 """
     year(d::Date)
 
-Get year associated to a [`Date`](@ref) `d`.
+Get year associated to a [`Date`](@ref).
 """
-year(d::Date) = d.year
+@inline year(d::Date) = d.year
 
 """
     month(d::Date)
 
-Get month associated to a [`Date`](@ref) `d`.
+Get month associated to a [`Date`](@ref).
 """
-month(d::Date) = d.month
+@inline month(d::Date) = d.month
 
 """
     day(d::Date)
 
-Get day associated to a [`Date`](@ref) `d`.
+Get day associated to a [`Date`](@ref).
 """
-day(d::Date) = d.day
+@inline day(d::Date) = d.day
 
 """
     isleapyear(d::Date)
@@ -144,30 +168,6 @@ in days.
 """
 j2000(d::Date) = j2000(cal2jd(d)...)
 
-function Date(offset::Integer)
-
-    year = find_year(offset)
-    dayinyear = offset - lastj2000dayofyear(year - 1)
-    ly = isleapyear(year)
-    month = find_month(dayinyear, ly)
-    day = find_day(dayinyear, month, ly)
-
-    return Date(year, month, day)
-end
-
-function Date(year::Integer, dayinyear::Integer)
-    if dayinyear <= 0
-        throw(DomainError("day in year must me ≥ than 0! $dayinyear provided."))
-    end
-
-    ly = isleapyear(year)
-    month = find_month(dayinyear, ly)
-    day = find_day(dayinyear, month, ly)
-
-    return Date(year, month, day)
-end
-
-Date(d::Date, offset::Integer) = Date(convert(Int, j2000(d)) + offset)
 
 function Base.show(io::IO, d::Date)
     return print(io, year(d), "-", lpad(month(d), 2, '0'), "-", lpad(day(d), 2, '0'))
@@ -181,6 +181,9 @@ end
 Base.:+(d::Date, x::Integer) = Date(d, x)
 Base.:-(d::Date, x::Integer) = Date(d, -x)
 
+# -------------------------------------
+# TIME
+# -------------------------------------
 
 """
     Time{T<:AbstractFloat}
@@ -371,9 +374,10 @@ function Base.show(io::IO, t::Time)
     return print(io, h, ":", m, ":", s, ".", f)
 end
 
-############
-# DATETIME #
-############
+# -------------------------------------
+# DATETIME
+# -------------------------------------
+
 
 """
     DateTime{N<:Integer, T<:AbstractFloat} <: AbstractDateTimeEpoch
@@ -526,4 +530,6 @@ end
 
 Base.:+(d1::DateTime, δs::Number) = DateTime(j2000s(d1) + δs)
 Base.:-(d1::DateTime, δs::Number) = DateTime(j2000s(d1) - δs)
+
+
 
