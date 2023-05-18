@@ -81,7 +81,8 @@ end
     @test day(dt) == rd
     @test hour(dt) == rH
     @test minute(dt) == rM
-    @test second(dt) == rS + rF
+    @test second(dt) == rS
+    @test second(Float64, dt) == rS + rF
 
     dtr = rand(0.0:1.0:(365.25 * 86400.0))
     dt2 = dt + dtr
