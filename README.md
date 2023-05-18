@@ -19,6 +19,29 @@ julia> import Pkg
 julia> Pkg.add("Tempo.jl");
 ```
 ## Quickstart
+Create different `Epochs`: 
+```julia
+# Create an Epoch from an ISO-formatted string
+tai = Epoch("2022-10-02T12:04:23.043 TAI")
+
+# Create an Epoch from a Julian Date
+jd = Epoch("JD 2451545.0")
+
+# Create an Epoch from a DateTime object and a timescale
+dt = DateTime(2001, 6, 15, 0, 0, 0, 0.0)
+e = Epoch(dt, TT)
+```
+
+Efficiently transform epochs between various timescales:
+```julia 
+
+# Convert an Epoch from TAI to TDB 
+tai = Epoch("2022-10-02T12:04:23.043 TAI")
+tdb = convert(TDB, tai)
+
+# Convert an Epoch from TAI to UTC automatically handling leapseconds 
+utc = convert(UTC, tai)
+```
 
 ## Documentation 
 For further information on this package please refer to the [stable documentation](https://juliaspacemissiondesign.github.io/Tempo.jl/stable/)
