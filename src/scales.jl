@@ -58,7 +58,7 @@ macro timescale(name::Symbol, id::Int, type::Symbol)
 
     return quote
         """
-        $($type_str)
+            $($type_str)
 
         A type representing the $($name_split) ($($name_str)) time scale.
         """
