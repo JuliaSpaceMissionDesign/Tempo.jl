@@ -1,3 +1,4 @@
+
 export Date,
     Time,
     year,
@@ -12,6 +13,7 @@ export Date,
     second,
     DateTime
 
+
 # -------------------------------------
 # DATE
 # -------------------------------------
@@ -19,13 +21,7 @@ export Date,
 """
     Date
 
-A type to represent a calendar date.
-
-### Fields
-
-- `year` -- year
-- `month` -- month 
-- `day` -- day
+A type to represent a calendar date by storing the year, month and day.
 
 ---
 
@@ -33,28 +29,11 @@ A type to represent a calendar date.
 
 Construct a `Date` object given the `year`, `month` and `day`.
 
-### Examples 
-
-```julia-repl
-julia> date = Date(2023, 5, 18)
-2023-05-18
-```
-
 ---
 
     Date(offset::Integer)
 
 Create a `Date` object given an integer number of days since `2000-01-01`.
-
-### Examples 
-
-```julia-repl 
-julia> Date(365)
-2000-12-31
-
-julia> Date(366)
-2001-01-01
-```
 
 ---
 
@@ -181,34 +160,47 @@ end
 Base.:+(d::Date, x::Integer) = Date(d, x)
 Base.:-(d::Date, x::Integer) = Date(d, -x)
 
+
 # -------------------------------------
 # TIME
 # -------------------------------------
 
 """
-    Time{T<:AbstractFloat}
+    Time{T}
 
-A type representing the time of the day.
+A type representing the time of the day storing the hour, minute, seconds and fraction 
+of seconds.
 
-### Fields
+---
 
-- `hour` -- hour 
-- `minute` -- minute 
-- `second` -- second 
-- `fraction` -- fraction of seconds
+    Time(hour::Int, minute::Int, second::Int, fraction::T) where {T <: Number}
 
-### Constructors
+Create a `Time` object of type `T`.
 
-- `Time{T}(hour::N, minute::N, second::N, 
-    fraction::T) where {N<:Integer, T<:AbstractFloat}` -- default constructor. 
+---
 
-- `Time(hour::N, minute::N, second::T) where {N<:Integer, T<:AbstractFloat}` -- 
-    initialize a `Time` type automatically computing seconds fractions 
+    Time(hour::Int, minute::Int, second::Number)
 
-- `Time(secondinday::Integer, fraction::T) where {T<:AbstractFloat}` -- type from 
-    second in the day and fraction of seconds. 
+Construct a `Time` object given the `hour`, `minute` and `seconds`. In this case, the 
+seconds can either be an integer or a floating point number. The fraction of seconds will
+be computed under the hood.
 
-- `Time(dt::DateTime)` -- extract time from [`DateTime`](@ref) objects.
+---
+
+    Time(secondinday::Int, fraction::Number)
+    Time(secondinday::Number)
+
+Create a `Time` object given the seconds of the day `secondinday` and/or the fraction of 
+seconds. 
+
+---
+
+    Time(dt::DateTime)
+
+Extract the `Time` object from a [`DateTime`](@ref) structure. 
+
+### See also 
+See also [`Date`](@ref) and [`DateTime`](@ref).
 """
 struct Time{T}
     hour::Int
@@ -218,15 +210,15 @@ struct Time{T}
 
     function Time(
         hour::Integer, minute::Integer, second::Integer, fraction::T
-    ) where {T <: AbstractFloat}
+    ) where {T <: Number}
         if hour < 0 || hour > 23
-            throw(DomainError("`hour` must be an integer between 0 and 23."))
+            throw(DomainError(hour, "the hour must be an integer between 0 and 23."))
         elseif minute < 0 || minute > 59
-            throw(DomainError("`minute` must be an integer between 0 and 59."))
+            throw(DomainError(minute, "minutes must be an integer between 0 and 59."))
         elseif second < 0 || second >= 61
-            throw(DomainError("`second` must be an integer between 0 and 61."))
+            throw(DomainError(second, "seconds must be an integer between 0 and 61."))
         elseif fraction < 0 || fraction > 1
-            throw(DomainError("`fraction` must be a number between 0 and 1."))
+            throw(DomainError(fraction, "fraction must be a number between 0 and 1."))
         end
 
         return new{T}(hour, minute, second, fraction)
@@ -241,8 +233,8 @@ end
 function Time(secondinday::Integer, fraction::Number)
     if secondinday < 0 || secondinday > 86400
         throw(
-            DomainError(
-                "seconds are out of range. Must be between 0 and 86400, provided $secondinday.",
+            DomainError(secondinday,
+                "the seconds must be between 0 and 86400.",
             ),
         )
     end
@@ -255,19 +247,24 @@ function Time(secondinday::Integer, fraction::Number)
     return Time(hour, minute, secondinday, fraction)
 end
 
+function Time(secondinday::Number)
+    sec, frac = divrem(secondinday, 1)
+    return Time(sec, frac)
+end
+
 """
     hour(t::Time)
 
 Get the current hour.
 """
-hour(t::Time) = t.hour
+@inline hour(t::Time) = t.hour
 
 """
     minute(t::Time)
 
 Get the current minute.
 """
-minute(t::Time) = t.minute
+@inline minute(t::Time) = t.minute
 
 """
     second(::Type{<:AbstractFloat}, t::Time)
@@ -321,15 +318,16 @@ hms2fd(t::Time) = hms2fd(t.hour, t.minute, t.second + t.fraction)
     fraction_of_day(t::Time)
     hms2fd(t::Time)
 
-Find fraction of day.
+Find the fraction of the day.
 
 ### Example
 
 ```julia-repl
 julia> t = Time(12, 30, 40.3424)
 12:30:40.3423
+
 julia> Tempo.fraction_of_day(t)
-0.5213002592592593  # days
+0.5213002592592593
 ```
 """
 fraction_of_day(t::Time) = hms2fd(t::Time)
@@ -337,31 +335,33 @@ fraction_of_day(t::Time) = hms2fd(t::Time)
 """
     fraction_of_second(t::Time)
 
-Find fraction of seconds.
+Find the fraction of seconds.
 
 ### Example
 
 ```julia-repl
 julia> t = Time(12, 30, 40.3424)
 12:30:40.3423
+
 julia> Tempo.fraction_of_second(t)
-0.3423999999999978  # seconds
+0.3423999999999978
 ```
 """
 fraction_of_second(t::Time) = t.fraction
 
 """
-    second_in_day(t::Time)::AbstractFloat
+    second_in_day(t::Time)
 
-Find second in the day.
+Find the second in the day.
 
 ### Example
 
 ```julia-repl
 julia> t = Time(12, 30, 40.3424)
 12:30:40.3423
+
 julia> Tempo.second_in_day(t)
-45040.3424  # seconds
+45040.3424
 ```
 """
 second_in_day(t::Time) = t.fraction + t.second + 60 * t.minute + 3600 * t.hour
@@ -374,47 +374,86 @@ function Base.show(io::IO, t::Time)
     return print(io, h, ":", m, ":", s, ".", f)
 end
 
+
 # -------------------------------------
 # DATETIME
 # -------------------------------------
 
 
 """
-    DateTime{N<:Integer, T<:AbstractFloat} <: AbstractDateTimeEpoch
+    DateTime{T}
 
-A type wrapping a date and a time since a reference date.
+A type wrapping a [`Date`](@ref) and a [`Time`](@ref) object.
 
-### Fields
+---
 
-- `date` -- `Date` part of the type
-- `time` -- `Time` part of the type
+    DateTime(date::Date, time::Time{T})
 
-### Constructors 
+Construct a `DateTime` object of type `T` from its `Date` and `Time` components.
 
-- `DateTime{T}(date::Date{N}, time::Time{N, T})` -- default constructor.
+---
 
-- `DateTime(year::N, month::N, day::N, hour::N, min::N, 
-    sec::N, frac::T=0.0) where {N<:Integer, T<:AbstractFloat}` -- full constructor
+    DateTime(year::Int, month::Int, day::Int, hour::Int, min::Int, sec::Int, frac::Number)
 
-- `DateTime(s::AbstractString)` -- parse `DateTime` from ISO string using 
-    [`parse_iso`](@ref).
+Create a `DateTime` object by parts. 
 
-- `DateTime(seconds::T) where {T<:AbstractFloat}` -- parse from seconds since J2000.
+---
 
-- `DateTime(d::Date, sec::T) where {T<:AbstractFloat}` -- parse as seconds since `d`.
+    DateTime(iso::AbstractString)
 
-- `DateTime{N, T}(dt::DateTime) where {N, T}` -- ghost constructor
+Create a `DateTime` object from by parsing an ISO datetime string `iso`, in the format 
+`YYYY-MM-DDThh:mm:ss.ffffffff`. The DateTime parts not provided in the string will be 
+assigned default values.
 
-- `DateTime(e::Epoch)` -- construct from `Epoch`
+### Examples 
+```julia-repl
+julia> DateTime("2023-05-18T20:14:55.02")
+2023-05-18T20:14:55.020
+
+julia> Tempo.DateTime("2022-05-12")
+2022-05-12T00:00:00.00
+```
+---
+
+    DateTime(seconds::Number)
+
+Create a `DateTime` object given the number of seconds elapsed since [`DJ2000`](@ref).
+
+---
+
+    DateTime(d::Date, sec::Number)
+
+Create a `DateTime` object given a `Date` and the number of seconds since midnight.
+
+### Examples 
+```julia-repl 
+julia> d = Date(2023, 5, 18)
+2023-05-18
+
+julia> DateTime(d, 0)
+2023-05-18T12:00:00.000
+
+julia> DateTime(d, 1)
+2023-05-18T12:00:01.000
+```
+
+---
+    
+    DateTime(e::Epoch) 
+
+Construct a `DateTime` object from an [`Epoch`](@ref).
+
+### See also 
+See also [`Date`](@ref), [`Time`](@ref) and [`Epoch`](@ref).
 """
-struct DateTime{T<:AbstractFloat}
+struct DateTime{T}
     date::Date
     time::Time{T}
 end
 
 function DateTime(
-    year::N, month::N, day::N, hour::N, min::N, sec::N, frac::T=0.0
-) where {N<:Integer,T<:AbstractFloat}
+    year::N, month::N, day::N, hour::N, min::N, sec::N, frac::Number=0
+) where {N<:Integer}
 
     return DateTime(Date(year, month, day), Time(hour, min, sec, frac))
     
@@ -422,7 +461,7 @@ end
 
 function DateTime(s::AbstractString)
 
-    length(split(s)) != 1 && throw(error("[Tempo] cannot parse $s as `DateTime`."))
+    length(split(s)) != 1 && throw(error("unable to parse $s as a `DateTime`."))
     dy, dm, dd, th, tm, ts, tms = parse_iso(s)
 
     return DateTime(dy, dm, dd, th, tm, ts, tms)
@@ -448,9 +487,10 @@ function DateTime(d::Date, sec::Number)
 
 end
 
-Date(dt::DateTime) = dt.date
-Time(dt::DateTime) = dt.time
 DateTime{T}(dt::DateTime{T}) where {T} = dt
+
+@inline Date(dt::DateTime) = dt.date
+@inline Time(dt::DateTime) = dt.time
 
 """
     year(d::DateTime)
@@ -520,6 +560,8 @@ j2000s(dt::DateTime) = j2000(dt::DateTime) * DAY2SEC
 Convert  a [`DateTime`](@ref) `dt` in a Julian Date since [`DJ2000`](@ref), in centuries.
 """
 j2000c(dt::DateTime) = j2000(dt) / CENTURY2DAY
+
+# Operations 
 
 Base.isless(d1::DateTime, d2::DateTime) = j2000(d1) < j2000(d2)
 Base.:(==)(d1::DateTime, d2::DateTime) = j2000(d1) == j2000(d2)
