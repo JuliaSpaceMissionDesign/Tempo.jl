@@ -37,10 +37,10 @@ specified as a second argument or written at the end of the string.
 
 This constructor requires that the `str` is in the format:
 
-    - **ISO** -- `yyyy-mm-ddTHH:MM:SS.ffff` : assume J2000 as origin
-    - **J2000** -- `DDDD.ffff` : parse Julian Date since J2000, in days
-    - **JD** -- `JD DDDDDDDDD.ffffff` : parse Julian Date, in days
-    - **MJD** -- `MJD DDDDDDDDD.ffffff` : parse a Modified Julian Date, in days
+- **ISO** -- `yyyy-mm-ddTHH:MM:SS.ffff` : assume J2000 as origin
+- **J2000** -- `DDDD.ffff` : parse Julian Date since J2000, in days
+- **JD** -- `JD DDDDDDDDD.ffffff` : parse Julian Date, in days
+- **MJD** -- `MJD DDDDDDDDD.ffffff` : parse a Modified Julian Date, in days
 
 A `TimeScale` can be added at the end of the string, separated by a whitespace. 
 If it is not declared, [`TDB`](@ref) will be used as a default timescale. 
@@ -92,7 +92,9 @@ Epoch(dt::DateTime, ::S) where {S<:AbstractTimeScale} = Epoch{S}(j2000s(dt))
 Epoch(dt::DateTime, ::Type{S}) where {S<:AbstractTimeScale} = Epoch{S}(j2000s(dt))
 
 Epoch(e::Epoch) = e
+
 Epoch{S,T}(e::Epoch{S,T}) where {S,T} = e
+Epoch{S,T}(e::Epoch{S,N}) where {S, N, T} = Epoch{S}(T(j2000s(e)))
 
 # Construct an epoch from an ISO string and a scale
 function Epoch(s::AbstractString, scale::AbstractTimeScale)
@@ -214,6 +216,10 @@ end
 
 Base.convert(::Type{S}, e::Epoch{S}) where {S<:AbstractTimeScale} = e
 Base.convert(::S, e::Epoch{S}) where {S<:AbstractTimeScale} = e
+
+Base.convert(::Type{N}, e::Epoch{S, N}) where {S, N} = e
+Base.convert(::Type{T}, e::Epoch{S, N}) where {S, N, T <: Number} = Epoch{S, T}(e)
+Base.convert(::Type{Epoch{S, N}}, e::Epoch{S, T}) where {S, T, N <: Number} = Epoch{S, N}(e)
 
 """
     convert(to::S2, e::Epoch{S1}; system::TimeSystem=TIMESCALES)
