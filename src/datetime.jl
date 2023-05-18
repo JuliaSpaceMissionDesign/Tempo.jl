@@ -67,6 +67,7 @@ struct Date
     day::Int
 end
 
+# Constructor given the number of days since J2000.
 function Date(offset::Integer)
 
     year = find_year(offset)
@@ -79,6 +80,7 @@ function Date(offset::Integer)
     return Date(year, month, day)
 end
 
+# Constructor given a year and the day of the year
 function Date(year::Integer, dayinyear::Integer)
     if dayinyear <= 0
         throw(DomainError("day in year must me ≥ than 0! $dayinyear provided."))
@@ -91,6 +93,7 @@ function Date(year::Integer, dayinyear::Integer)
     return Date(year, month, day)
 end
 
+# Constructor given a date and the number of days since that date
 Date(d::Date, offset::Integer) = Date(convert(Int, j2000(d)) + offset)
 
 """
@@ -142,7 +145,7 @@ cal2jd(d::Date) = cal2jd(year(d), month(d), day(d))
 """
     j2000(d::Date)
 
-Convert Gregorian calendar date [`Date`](@ref) to Julian Date since [`DJ2000`](@ref), 
+Convert Gregorian calendar date [`Date`](@ref) to a Julian Date since [`J2000`](@ref), 
 in days.
 """
 j2000(d::Date) = j2000(cal2jd(d)...)
@@ -225,11 +228,13 @@ struct Time{T}
     end
 end
 
+# Constructor given hour, minute and seconds as a floating point number
 function Time(hour::Integer, minute::Integer, second::Number)
     sec, frac = divrem(second, 1)
     return Time(hour, minute, convert(Int, sec), frac)
 end
 
+# Constructor given an integer number of seconds in a day and the fraction of seconds.
 function Time(secondinday::Integer, fraction::Number)
     if secondinday < 0 || secondinday > 86400
         throw(
@@ -247,6 +252,7 @@ function Time(secondinday::Integer, fraction::Number)
     return Time(hour, minute, secondinday, fraction)
 end
 
+# Constructor given the seconds in a day as an integer or floating-point number.
 function Time(secondinday::Number)
     sec, frac = divrem(secondinday, 1)
     return Time(sec, frac)
@@ -417,7 +423,7 @@ julia> Tempo.DateTime("2022-05-12")
 
     DateTime(seconds::Number)
 
-Create a `DateTime` object given the number of seconds elapsed since [`DJ2000`](@ref).
+Create a `DateTime` object given the number of seconds elapsed since [`J2000`](@ref).
 
 ---
 
@@ -437,12 +443,6 @@ julia> DateTime(d, 1)
 2023-05-18T12:00:01.000
 ```
 
----
-    
-    DateTime(e::Epoch) 
-
-Construct a `DateTime` object from an [`Epoch`](@ref).
-
 ### See also 
 See also [`Date`](@ref), [`Time`](@ref) and [`Epoch`](@ref).
 """
@@ -451,6 +451,7 @@ struct DateTime{T}
     time::Time{T}
 end
 
+# Default constructor
 function DateTime(
     year::N, month::N, day::N, hour::N, min::N, sec::N, frac::Number=0
 ) where {N<:Integer}
@@ -459,6 +460,7 @@ function DateTime(
     
 end
 
+# Constructor to parse an ISO string
 function DateTime(s::AbstractString)
 
     length(split(s)) != 1 && throw(error("unable to parse $s as a `DateTime`."))
@@ -468,6 +470,7 @@ function DateTime(s::AbstractString)
 
 end
 
+# Constructor with the number of seconds since J2000
 function DateTime(seconds::Number)
 
     y, m, d, H, M, Sf = jd2calhms(DJ2000, seconds / DAY2SEC)
@@ -477,6 +480,7 @@ function DateTime(seconds::Number)
 
 end
 
+# Constructor with the number of seconds in the day
 function DateTime(d::Date, sec::Number)
 
     jd1 = j2000(d) + sec / DAY2SEC
@@ -528,18 +532,23 @@ Get minute associated to a [`DateTime`](@ref) type.
 minute(dt::DateTime) = minute(Time(dt))
 
 """
+    second(::Type{<:AbstractFloat}, t::Time)
     second(d::DateTime)
 
-Get the seconds associated to a [`DateTime`](@ref) type.
+Get the seconds associated to a [`DateTime`](@ref) type. If a floating-point type is given 
+as first argument, the returned value will also account for the fraction of seconds.
 """
+second(::Type{T}, dt::DateTime) where T = second(T, Time(dt))
 second(dt::DateTime) = second(Time(dt))
+# FIXME: qui sopra quale valore si vuole ritornare? Dovrebbe essere consistente con 
+# l'utilizzo in `Time`
 
 Base.show(io::IO, dt::DateTime) = print(io, Date(dt), "T", Time(dt))
 
 """
     j2000(dt::DateTime)
 
-Convert a [`DateTime`](@ref) `dt` in Julian days since J2000
+Convert a [`DateTime`](@ref) `dt` in Julian days since [`J2000`](@ref).
 """
 function j2000(dt::DateTime)
     jd1, jd2 = calhms2jd(year(dt), month(dt), day(dt), hour(dt), minute(dt), second(dt))
@@ -549,7 +558,7 @@ end
 """
     j2000s(dt::DateTime)
 
-Convert a [`DateTime`](@ref) `dt` to seconds since J2000
+Convert a [`DateTime`](@ref) `dt` to seconds since [`J2000`](@ref).
 """
 j2000s(dt::DateTime) = j2000(dt::DateTime) * DAY2SEC
 
@@ -557,7 +566,7 @@ j2000s(dt::DateTime) = j2000(dt::DateTime) * DAY2SEC
 """
     j2000c(dt::DateTime)
 
-Convert  a [`DateTime`](@ref) `dt` in a Julian Date since [`DJ2000`](@ref), in centuries.
+Convert  a [`DateTime`](@ref) `dt` in a Julian Date since [`J2000`](@ref), in centuries.
 """
 j2000c(dt::DateTime) = j2000(dt) / CENTURY2DAY
 

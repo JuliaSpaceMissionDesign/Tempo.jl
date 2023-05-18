@@ -157,7 +157,7 @@ end
 
 This function converts a given date in the Gregorian calendar (year, month, day) to the 
 corresponding two-parts Julian Date. The first part is the [`DJ2000`](@ref), while the 
-second output is the number of days since [`DJ2000`](@ref).
+second output is the number of days since [`J2000`](@ref).
 
 The year must be greater than 1583, and the month must be between 1 and 12. The day must 
 also be valid, taking into account whether the year is a leap year. If the input year or 
@@ -218,7 +218,7 @@ end
     calhms2jd(year, month, day, hour, minute, seconds) 
 
 Convert Gregorian Calendar date and time to a two-parts Julian Date. The first part 
-is the [`DJ2000`](@ref), while the second output is the number of days since [`DJ2000`](@ref).
+is the [`DJ2000`](@ref), while the second output is the number of days since [`J2000`](@ref).
 
 ### Examples 
 ```julia-repl
