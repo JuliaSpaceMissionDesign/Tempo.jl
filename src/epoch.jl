@@ -1,10 +1,10 @@
 export Epoch, j2000, j2000s, j2000c, second, timescale, value
 
 """
-    Epoch
+    Epoch{S, T}
 
 A type to represent Epoch-like data. 
-Epochs here are represented as seconds + fraction since a reference epoch, which 
+Epochs are here represented as seconds + fraction of seconds since a reference epoch, which 
 is considered to be `2000-01-01T12:00:00`, i.e. [`J2000`](@ref).
 
 ### Fields 
@@ -20,76 +20,20 @@ is considered to be `2000-01-01T12:00:00`, i.e. [`J2000`](@ref).
 """
 struct Epoch{S,T}
     scale::S
-    seconds::T
-    function Epoch{S}(seconds::T) where {S<:AbstractTimeScale,T<:AbstractFloat}
-        return new{S,T}(S(), seconds)
-    end
+    seconds::Int
+    fraction::T
 end
 
-"""
-    timescale(ep::Epoch)
-
-Epoch timescale.
-"""
-timescale(ep::Epoch) = ep.scale
-
-"""
-    value(ep::Epoch)
-
-Full `Epoch` value.
-"""
-value(ep::Epoch) = ep.seconds
-
-function Epoch(sec::T, ::S) where {S<:AbstractTimeScale,T<:AbstractFloat}
-    return Epoch{S}(sec)
+function Epoch{S}(seconds::Number) where {S<:AbstractTimeScale}
+    sec, frac = divrem(seconds, 1)    
+    return Epoch{S, typeof(frac)}(S(), Int(sec), frac)
 end
 
-function Epoch(dt::DateTime, ::S) where {S<:AbstractTimeScale}
-    return Epoch{S}(j2000s(dt))
-end
+Epoch(sec::Number, ::S) where {S<:AbstractTimeScale} = Epoch{S}(sec)
+Epoch(sec::Number, ::Type{S}) where {S<:AbstractTimeScale} = Epoch{S}(sec)
 
-function Epoch(sec::T, ::Type{S}) where {S<:AbstractTimeScale,T<:AbstractFloat}
-    return Epoch{S}(sec)
-end
-
-function Epoch(dt::DateTime, ::Type{S}) where {S<:AbstractTimeScale}
-    return Epoch{S}(j2000s(dt))
-end
-
-"""
-    j2000(e::Epoch)
-
-Convert `Epoch` in Julian Date since J2000 (days)
-"""
-j2000(e::Epoch) = e.seconds / DAY2SEC
-
-"""
-    j2000s(e::Epoch)
-
-Convert `Epoch` in Julian Date since J2000 (seconds)
-"""
-j2000s(e::Epoch) = value(e)
-
-"""
-    j2000c(e::Epoch)
-
-Convert `Epoch` in Julian Date since J2000 (centuries)
-"""
-j2000c(e::Epoch) = value(e) / CENTURY2SEC
-
-function Base.show(io::IO, ep::Epoch)
-    return print(io, DateTime(ep), " ", timescale(ep))
-end
-
-function DateTime(ep::Epoch)
-
-    y, m, d, H, M, S = jd2calhms(DJ2000, ep.seconds / DAY2SEC)
-    fint = floor(Int64, S)
-    f = S - fint
-
-    return DateTime(y, m, d, H, M, fint, f)
-    
-end
+Epoch(dt::DateTime, ::S) where {S<:AbstractTimeScale} = Epoch{S}(j2000s(dt))
+Epoch(dt::DateTime, ::Type{S}) where {S<:AbstractTimeScale} = Epoch{S}(j2000s(dt))
 
 Epoch(e::Epoch) = e
 Epoch{S,T}(e::Epoch{S,T}) where {S,T} = e
@@ -199,6 +143,46 @@ function Epoch(s::AbstractString)
     return Epoch(parse(Float64, sub[1]) * 86400.0, scale)
 end
 
+
+"""
+    timescale(ep::Epoch)
+
+Epoch timescale.
+"""
+timescale(ep::Epoch) = ep.scale
+
+"""
+    value(ep::Epoch)
+
+Full `Epoch` value.
+"""
+value(ep::Epoch) = ep.seconds
+
+"""
+    j2000(e::Epoch)
+
+Convert `Epoch` in Julian Date days since [`J2000`](@ref).
+"""
+j2000(e::Epoch) = e.seconds / DAY2SEC
+
+"""
+    j2000s(e::Epoch)
+
+Convert `Epoch` in Julian Date seconds since [`J2000`](@ref).
+"""
+j2000s(e::Epoch) = value(e)
+
+"""
+    j2000c(e::Epoch)
+
+Convert `Epoch` in Julian Date centuries since [`J2000`](@ref).
+"""
+j2000c(e::Epoch) = value(e) / CENTURY2SEC
+
+function Base.show(io::IO, ep::Epoch)
+    return print(io, DateTime(ep), " ", timescale(ep))
+end
+
 # ----
 # Operations
 
@@ -220,6 +204,9 @@ function Base.isapprox(e1::Epoch{S}, e2::Epoch{S}; kwargs...) where {S}
     return isapprox(value(e1), value(e2); kwargs...)
 end
 
+# ---
+# Type Conversions and Promotions 
+
 Base.convert(::Type{S}, e::Epoch{S}) where {S<:AbstractTimeScale} = e
 Base.convert(::S, e::Epoch{S}) where {S<:AbstractTimeScale} = e
 
@@ -230,13 +217,30 @@ Convert `Epoch` with timescale `S1` to `S2`. Allows to use the default `TimeSyst
 a custom constructed one. 
 """
 function Base.convert(
-    to::S2, e::Epoch{S1}; system::TimeSystem=TIMESCALES
-) where {S1<:AbstractTimeScale,S2<:AbstractTimeScale}
+    to::S2, e::Epoch{S1}; system::TimeSystem = TIMESCALES
+) where {S1 <: AbstractTimeScale, S2 <: AbstractTimeScale}
+
     try
         return Epoch{S2}(apply_offsets(system, e.seconds, timescale(e), to))
+
     catch
-        EpochConversionError(
-            String(Symbol(@__MODULE__)), "cannot convert Epoch from timescale $S1 to $S2"
-        )
+        throw(EpochConversionError("cannot convert Epoch from the timescale $S1 to $S2."))
     end
+
 end
+
+"""
+    DateTime(e::Epoch) 
+
+Construct a `DateTime` object from an [`Epoch`](@ref).
+"""
+function DateTime(ep::Epoch)
+
+    y, m, d, H, M, S = jd2calhms(DJ2000, ep.seconds / DAY2SEC)
+    fint = floor(Int64, S)
+    f = S - fint
+
+    return DateTime(y, m, d, H, M, fint, f)
+    
+end
+

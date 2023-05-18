@@ -281,6 +281,9 @@ function add_timescale!(
     end
 end
 
+# If the timescale is the same, no-offset has to be added 
+apply_offsets(::TimeSystem, sec::Number, ::S, ::S) where {S<:AbstractTimeScale} = sec
+
 
 function apply_offsets(
     ts::TimeSystem, sec::Number, from::AbstractTimeScale, to::AbstractTimeScale
@@ -290,10 +293,9 @@ function apply_offsets(
     )
 end
 
-@inline function apply_offsets(
-    scales::TimeSystem{N}, sec::N, path::Vector{Int}
-) where {N<:Number}
-    # initilize 
+function apply_offsets(scales::TimeSystem, sec::Number, path::Vector{Int})
+
+    # Initialise  
     offsec = sec
 
     tsi = get_mappednode(scales.scales, path[1])
@@ -306,28 +308,26 @@ end
         tsip1 = get_mappednode(scales.scales, path[i + 1])
         offsec += apply_offsets(offsec, tsi, tsip1)
     end
+
     return offsec
+
 end
 
-@inline function apply_offsets(
-    sec::N, ts1::TimeScaleNode{N}, ts2::TimeScaleNode{N}
-) where {N<:Number}
+function apply_offsets(sec::Number, ts1::TimeScaleNode, ts2::TimeScaleNode)
+
     if ts1.parentid == ts2.id
-        # This is the case in which the inverse transformation (from child to parent)
-        # is used 
+        # Inverse transformation (from child to parent)
         offset = ts1.ftp(sec)
+
     else # ts2.parentid == ts1.id
-        # In this case the direct transformation (from parent to child is used)
+        # Direct transformation (from parent to child is used)
         offset = ts2.ffp(sec)
     end
+
     return offset
 end
 
-@inline function apply_offsets(
-    ::TimeSystem{N}, sec::N, ::S, ::S
-) where {N<:Number,S<:AbstractTimeScale}
-    return sec
-end
+
 
 
 # -------------------------------------
