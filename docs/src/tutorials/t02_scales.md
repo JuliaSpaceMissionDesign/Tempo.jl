@@ -48,7 +48,7 @@ registration can be performed as follows:
 
 
 ```julia
-add_timescale(TIMETRANSF, DTS)
+add_timescale!(TIMETRANSF, DTS)
 ```
 
 
@@ -86,11 +86,11 @@ const OFFSET_DTS_TO_NTSA = 1.0
 @inline offset_ntsa2dts(sec::Number) = -OFFSET_DTS_TO_NTSA;
 ```
 
-We can now register `NTSA` to the computational graph using the `add_timescale` method:
+We can now register `NTSA` to the computational graph using the `add_timescale!` method:
 
 
 ```julia
-add_timescale(TIMETRANSF, NTSA, offset_dts2ntsa, parent=DTS, ftp=offset_ntsa2dts)
+add_timescale!(TIMETRANSF, NTSA, offset_dts2ntsa, parent=DTS, ftp=offset_ntsa2dts)
 ```
 
 Now, if we have a look to the computational graph, we'll se that `NTSA` is registered:
@@ -155,7 +155,7 @@ To conclude the example, `NTSB` is has to be inserted. Let's assume that only th
 # Create the linear offset function
 offset_ntsa2ntsb(sec::Number) = sec/86400.0
 # Register the timescale to the computational graph
-add_timescale(TIMETRANSF, NTSB, offset_ntsa2ntsb, parent=NTSA)
+add_timescale!(TIMETRANSF, NTSB, offset_ntsa2ntsb, parent=NTSA)
 ```
 
 Now, let's have a look to the nodes in the graph:

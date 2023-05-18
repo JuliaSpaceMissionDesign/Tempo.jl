@@ -57,7 +57,6 @@ julia> Date(2020, 300)
 
 Extract the `Date` object from a [`DateTime`](@ref) structure. 
 
-
 ### See also 
 See also [`Time`](@ref) and [`DateTime`](@ref).
 """

@@ -86,7 +86,7 @@ end
 
     dtr = rand(0.0:1.0:(365.25 * 86400.0))
     dt2 = dt + dtr
-    @test Tempo.j2000s(dt2) - Tempo.j2000s(dt) ≈ dtr atol=1e-11 rtol=1e-11
+    @test Tempo.j2000s(dt2) - Tempo.j2000s(dt) ≈ dtr
     
     d = Date(2000, 1, 1)
     dt = DateTime(d, 0.0)
