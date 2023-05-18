@@ -109,14 +109,6 @@ All timescales are subtypes of the abstract type `AbstractTimeScale`.
 abstract type AbstractTimeScale end
 
 """
-    timescale_alias(scale::AbstractTimeScale)
-
-Return the ID associated to `scale`.
-"""
-@inline timescale_alias(s::AbstractTimeScale) = timescale_id(s)
-timescale_alias(s::Int) = s
-
-"""
     timescale_id(scale::AbstractTimeScale)
 
 Return the ID of `scale`.
@@ -129,6 +121,14 @@ timescale_id(::AbstractTimeScale) = nothing
 Return the name of `scale`.
 """
 timescale_name(::AbstractTimeScale) = nothing
+
+"""
+    timescale_alias(scale::AbstractTimeScale)
+
+Return the ID associated to `scale`.
+"""
+@inline timescale_alias(s::AbstractTimeScale) = timescale_id(s)
+timescale_alias(s::Int) = s
 
 """
     @timescale(name, id, type)
