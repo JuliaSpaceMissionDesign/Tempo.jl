@@ -41,7 +41,7 @@ end
 Return the linear offset between [`TT`](@ref) and [`TCG`](@ref) in seconds.
 """
 @inline function offset_tt2tcg(seconds)
-    rate = LG_RATE / (1.0 - LG_RATE)
+    rate = LG_RATE / (1 - LG_RATE)
     δt = seconds - JD77_SEC
     return rate * δt
 end
@@ -68,7 +68,7 @@ end
 Return the linear offset between [`TDB`](@ref) and [`TCB`](@ref) in seconds.
 """
 @inline function offset_tdb2tcb(seconds)
-    rate = LB_RATE / (1.0 - LB_RATE)
+    rate = LB_RATE / (1 - LB_RATE)
     δt = seconds - JD77_SEC
     return rate * δt
 end
@@ -119,7 +119,7 @@ This routine is accurate to ~40 microseconds over the interval 1900-2100.
 """
 @inline function offset_tdb2tt(seconds)
     tt = seconds
-    offset = 0.0
+    offset = 0
     for _ in 1:3
         g = m₀ + m₁ * tt
         offset = -k * sin(g + eb * sin(g))
@@ -138,9 +138,9 @@ end
 Return the offset between [`TAI`](@ref) and [`UTC`](@ref) in seconds.
 """
 @inline function offset_tai2utc(seconds)
-    tai = seconds / 86400.0
+    tai = seconds / DAY2SEC
     _, utc = tai2utc(DJ2000, tai)
-    return (utc - tai) * 86400
+    return (utc - tai) * DAY2SEC
 end
 
 """
@@ -149,9 +149,9 @@ end
 Return the offset between [`UTC`](@ref) and [`TAI`](@ref) in seconds.
 """
 @inline function offset_utc2tai(seconds)
-    utc = seconds / 86400.0
+    utc = seconds / DAY2SEC
     _, tai = utc2tai(DJ2000, utc)
-    return (tai - utc) * 86400.0
+    return (tai - utc) * DAY2SEC
 end
 
 ########################
@@ -186,7 +186,7 @@ end
 # GPS #
 #######
 
-const OFFSET_TAI_GPS = 19.000  # seconds 
+const OFFSET_TAI_GPS = 19  # seconds 
 
 """
     offset_tai2gps(seconds)
