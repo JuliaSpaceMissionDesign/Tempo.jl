@@ -18,7 +18,7 @@ end
         h = rand(0:23)
         m = rand(0:59)
         s = rand(0.0:59.0)
-        @test Tempo.hms2fd(h, m, s) ≈ ((s / 60 + m) / 60 + h) / 24
+        @test Tempo.hms2fd(h, m, s) ≈ ((s / 60 + m) / 60 + h) / 24 atol=1e-11 rtol=1e-11
     end
 
     @test_throws DomainError Tempo.hms2fd(24, 0, 0.0)
@@ -53,7 +53,7 @@ end
     h, m, s = 11, 51, 55.05
 
     @test sum(Tempo.cal2jd(Y, M, D)) - 0.5 + Tempo.hms2fd(h, m, s) ≈
-        sum(Tempo.calhms2jd(Y, M, D, h, m, s))
+        sum(Tempo.calhms2jd(Y, M, D, h, m, s)) atol=1e-11 rtol=1e-11
 
     @test_throws DomainError Tempo.cal2jd(
         rand(0:1580), rand(1:12), rand(1:28)
@@ -72,7 +72,7 @@ end
         y, m, d, _, _, _, _ = _random_datetime()
         ejd = sum(ERFA.cal2jd(y, m, d))
         bjd = sum(Tempo.cal2jd(y, m, d))
-        @test ejd + 0.5 ≈ bjd atol = 1e-4
+        @test ejd + 0.5 ≈ bjd atol = 1e-11 rtol=1e-11
     end
 end
 
@@ -81,7 +81,7 @@ end
         y, m, d, H, M, S, f = _random_datetime()
         ejd = sum(ERFA.dtf2d("NONE", y, m, d, H, M, S + f))
         bjd = sum(Tempo.calhms2jd(y, m, d, H, M, S + f))
-        @test ejd ≈ bjd atol = 1e-4
+        @test ejd ≈ bjd atol = 1e-11 rtol=1e-11
     end
 end
 
@@ -94,7 +94,7 @@ end
         @test any((
             (tai2 - utc2) * 86400 ≈ Tempo.leapseconds(utc1 - Tempo.DJ2000 + utc2),
             (tai2 - utc2) * 86400 ≈ Tempo.leapseconds(utc1 - Tempo.DJ2000 + utc2) + 1,
-        ))
+        )) 
     end
 end
 
@@ -107,8 +107,8 @@ end
         tai1, tai2 = Tempo.utc2tai(utc1, utc2)
         tai1e, tai2e = ERFA.utctai(utc1, utc2)
 
-        @test tai2 ≈ tai2e
-        @test tai1 ≈ tai1e
+        @test tai2 ≈ tai2e atol=1e-11 rtol=1e-11
+        @test tai1 ≈ tai1e atol=1e-11 rtol=1e-11
     end
 end
 
@@ -120,8 +120,8 @@ end
         tai1, tai2 = Tempo.utc2tai(utc1, utc2)
         u1, u2 = Tempo.tai2utc(tai1, tai2)
 
-        @test u1 ≈ utc1
-        @test u2 ≈ utc2
+        @test u1 ≈ utc1 atol=1e-11 rtol=1e-11
+        @test u2 ≈ utc2 atol=1e-11 rtol=1e-11
     end
 
     # test limit case
@@ -131,7 +131,7 @@ end
     tai1, tai2 = Tempo.utc2tai(utc1, utc2)
     u1, u2 = Tempo.tai2utc(tai1, tai2)
 
-    @test u2 ≈ utc2
+    @test u2 ≈ utc2 atol=1e-11 rtol=1e-11
 end
 
 @testset "Function tai2utc vs ERFA (taiutc.c)" begin
@@ -143,7 +143,7 @@ end
         utc1, utc2 = Tempo.tai2utc(tai1, tai2)
         utc1e, utc2e = ERFA.taiutc(tai1, tai2)
 
-        @test utc2 ≈ utc2e
-        @test utc1 ≈ utc1e
+        @test utc2 ≈ utc2e atol=1e-11 rtol=1e-11 
+        @test utc1 ≈ utc1e atol=1e-11 rtol=1e-11
     end
 end

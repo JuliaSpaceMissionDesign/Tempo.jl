@@ -70,9 +70,9 @@ end
     @test J2000 == DateTime(0.0)
 
     D2 = DateTime(Tempo.DAY2SEC / 3)
-    @test Tempo.j2000(D2) ≈ 1 / 3
-    @test Tempo.j2000s(D2) ≈ 1 / 3 * Tempo.DAY2SEC
-    @test Tempo.j2000c(D2) ≈ 1 / 3 / Tempo.CENTURY2DAY
+    @test Tempo.j2000(D2) ≈ 1 / 3 atol=1e-11 rtol=1e-11
+    @test Tempo.j2000s(D2) ≈ 1 / 3 * Tempo.DAY2SEC atol=1e-11 rtol=1e-11
+    @test Tempo.j2000c(D2) ≈ 1 / 3 / Tempo.CENTURY2DAY atol=1e-11 rtol=1e-11
 
     _, ry, rm, rd, rH, rM, rS, rF = _random_datetime_isostr()
     dt = DateTime(ry, rm, rd, rH, rM, rS, rF)
@@ -86,7 +86,7 @@ end
 
     dtr = rand(0.0:1.0:(365.25 * 86400.0))
     dt2 = dt + dtr
-    @test Tempo.j2000s(dt2) - Tempo.j2000s(dt) ≈ dtr
+    @test Tempo.j2000s(dt2) - Tempo.j2000s(dt) ≈ dtr atol=1e-11 rtol=1e-11
     
     d = Date(2000, 1, 1)
     dt = DateTime(d, 0.0)

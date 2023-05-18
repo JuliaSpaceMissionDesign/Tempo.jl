@@ -1,77 +1,55 @@
 export Epoch, j2000, j2000s, j2000c, second, timescale, value
 
-"""
-    Epoch{S, T}
-
-A type to represent Epoch-like data. 
-Epochs are here represented as seconds + fraction of seconds since a reference epoch, which 
-is considered to be `2000-01-01T12:00:00`, i.e. [`J2000`](@ref).
-
-### Fields 
-
-- `scale` -- `TimeScale` to represent the date 
-- `seconds` -- seconds since `origin`
-
-### Constructors
-
-- `Epoch{S}(seconds::T) where {S<:AbstractTimeScale, T<:AbstractFloat}` -- default
-- `Epoch(seconds::T, ::S) where {S<:AbstractTimeScale, T<:AbstractFloat}` 
-- `Epoch(dt::DateTime, ::S) where {S<:AbstractTimeScale}` -- construct from `DateTime`
-"""
-struct Epoch{S,T}
-    scale::S
-    seconds::Int
-    fraction::T
-end
-
-function Epoch{S}(seconds::Number) where {S<:AbstractTimeScale}
-    sec, frac = divrem(seconds, 1)    
-    return Epoch{S, typeof(frac)}(S(), Int(sec), frac)
-end
-
-Epoch(sec::Number, ::S) where {S<:AbstractTimeScale} = Epoch{S}(sec)
-Epoch(sec::Number, ::Type{S}) where {S<:AbstractTimeScale} = Epoch{S}(sec)
-
-Epoch(dt::DateTime, ::S) where {S<:AbstractTimeScale} = Epoch{S}(j2000s(dt))
-Epoch(dt::DateTime, ::Type{S}) where {S<:AbstractTimeScale} = Epoch{S}(j2000s(dt))
-
-Epoch(e::Epoch) = e
-Epoch{S,T}(e::Epoch{S,T}) where {S,T} = e
-
-"""
-    Epoch(s::AbstractString, scale::AbstractTimeScale)
-
-Construct an `Epoch` from a `str` in the [`AbstractTimeScale`](@ref) (`scale`). 
-
-!!! note 
-    This constructor requires that the `str` is in the format `yyyy-mm-ddTHH:MM:SS.sss`.
-"""
-function Epoch(s::AbstractString, scale::AbstractTimeScale)
-    y, m, d, H, M, sec, sf = parse_iso(s)
-    _, jd2 = calhms2jd(y, m, d, H, M, sec + sf)
-    return Epoch(jd2 * 86400, scale)
-end
-
 # This is the default timescale used by Epochs 
 const DEFAULT_EPOCH_TIMESCALE = :TDB
 
 """
-    Epoch(s::AbstractString)
+    Epoch{S, T}
 
-Construct an `Epoch` from a `str`.
+A type to represent Epoch-like data. Epochs are internally represented as seconds + fraction of 
+seconds since a reference epoch, which is considered to be `2000-01-01T12:00:00`, 
+i.e. [`J2000`](@ref).
 
-!!! note 
-    This constructor requires that the `str` is in the format:
+---
+
+    Epoch(sec::Number, scale::AbstractTimeScale)
+    Epoch(sec::Number, scale::Type{<:AbstractTimeScale})
+    Epoch{S}(seconds::Number) where {S <: AbstractTimeScale}
+
+
+Create an `Epoch` object from the number of seconds since [`J2000`](@ref) with the 
+timescale `S`.
+
+---
+
+    Epoch(dt::DateTime, scale::AbstractTimeScale)
+    Epoch(dt::DateTime, scale::Type{<:AbstractTimeScale})
+
+Create an `Epoch` object from a `DateTime` structure with timescale `scale`.
+
+---
+
+    Epoch(str::AbstractString, scale::AbstractTimeScale)
+    Epoch(str::AbstractString)
+
+Create an `Epoch` object from an ISO-formatted string. The timescale can either be 
+specified as a second argument or written at the end of the string. 
+
+This constructor requires that the `str` is in the format:
+
     - **ISO** -- `yyyy-mm-ddTHH:MM:SS.ffff` : assume J2000 as origin
-    - **J2000** -- `DDDD.ffff` : parse Julian Dates since J2000 (days)
-    - **JD** -- `JD DDDDDDDDD.ffffff` : parse Julian Date (days)
-    - **MJD** -- `MJD DDDDDDDDD.ffffff` : parse Julian Dates since (days)
-    In all cases the `TimeScale` should be added at the end of the string, 
-    separated by a whitespace. If it is not declared, [`TDB`](@ref) will be 
-    used as timescale. 
+    - **J2000** -- `DDDD.ffff` : parse Julian Date since J2000, in days
+    - **JD** -- `JD DDDDDDDDD.ffffff` : parse Julian Date, in days
+    - **MJD** -- `MJD DDDDDDDDD.ffffff` : parse a Modified Julian Date, in days
 
-### Examples
-```@example 
+A `TimeScale` can be added at the end of the string, separated by a whitespace. 
+If it is not declared, [`TDB`](@ref) will be used as a default timescale. 
+
+### Examples 
+# FIXME: non mi fanno impazzire i commenti nella REPL, se li togliessimo oppure mettessimo 
+i vari esempi spezzettati? 
+
+```julia-repl 
 julia> # standard ISO string 
 julia> Epoch("2050-01-01T12:35:15.0000 TT")
 2050-01-01T12:35:14.9999 TT
@@ -95,9 +73,37 @@ julia> Epoch("12.0")
 julia> # All Julian Date parsers allow timescales 
 julia> Epoch("12.0 TT")
 2000-01-13T12:00:00.0000 TT
-```
 """
+struct Epoch{S,T}
+    scale::S
+    seconds::Int
+    fraction::T
+end
+
+function Epoch{S}(seconds::Number) where {S<:AbstractTimeScale}
+    sec, frac = divrem(seconds, 1)    
+    return Epoch{S, typeof(frac)}(S(), Int(sec), frac)
+end
+
+Epoch(sec::Number, ::S) where {S<:AbstractTimeScale} = Epoch{S}(sec)
+Epoch(sec::Number, ::Type{S}) where {S<:AbstractTimeScale} = Epoch{S}(sec)
+
+Epoch(dt::DateTime, ::S) where {S<:AbstractTimeScale} = Epoch{S}(j2000s(dt))
+Epoch(dt::DateTime, ::Type{S}) where {S<:AbstractTimeScale} = Epoch{S}(j2000s(dt))
+
+Epoch(e::Epoch) = e
+Epoch{S,T}(e::Epoch{S,T}) where {S,T} = e
+
+# Construct an epoch from an ISO string and a scale
+function Epoch(s::AbstractString, scale::AbstractTimeScale)
+    y, m, d, H, M, sec, sf = parse_iso(s)
+    _, jd2 = calhms2jd(y, m, d, H, M, sec + sf)
+    return Epoch(jd2 * 86400, scale)
+end
+
+# Construct an epoch from an ISO string
 function Epoch(s::AbstractString)
+
     scale = eval(DEFAULT_EPOCH_TIMESCALE) # default timescale
 
     # ISO 
@@ -142,7 +148,6 @@ function Epoch(s::AbstractString)
     end
     return Epoch(parse(Float64, sub[1]) * 86400.0, scale)
 end
-
 
 """
     timescale(ep::Epoch)
