@@ -254,7 +254,7 @@ end
 # Constructor given the seconds in a day as an integer or floating-point number.
 function Time(secondinday::Number)
     sec, frac = divrem(secondinday, 1)
-    return Time(sec, frac)
+    return Time(convert(Int, sec), frac)
 end
 
 """
@@ -473,9 +473,9 @@ end
 function DateTime(seconds::Number)
 
     y, m, d, H, M, Sf = jd2calhms(DJ2000, seconds / DAY2SEC)
-    s = floor(Int64, Sf)
+    s, f = divrem(Sf, 1)
 
-    return DateTime(y, m, d, H, M, s, Sf - s)
+    return DateTime(y, m, d, H, M, convert(Int, s), f)
 
 end
 
@@ -484,9 +484,9 @@ function DateTime(d::Date, sec::Number)
 
     jd1 = j2000(d) + sec / DAY2SEC
     y, m, d, H, M, Sf = jd2calhms(DJ2000, jd1)
-    s = floor(Int64, Sf)
+    s, f = divrem(Sf, 1)
 
-    return DateTime(y, m, d, H, M, s, Sf - s)
+    return DateTime(y, m, d, H, M, convert(Int, s), f)
 
 end
 
@@ -541,11 +541,11 @@ second(::Type{T}, dt::DateTime) where T = second(T, Time(dt))
 second(dt::DateTime) = second(Time(dt))
 
 """
-    fraction(d::DateTime)
+    fraction_of_second(d::DateTime)
 
 Get the fraction of seconds associated to a [`DateTime`](@ref) object.
 """
-fraction(dt::DateTime) = fraction_of_second(Time(dt))
+fraction_of_second(dt::DateTime) = fraction_of_second(Time(dt))
 
 Base.show(io::IO, dt::DateTime) = print(io, Date(dt), "T", Time(dt))
 
@@ -557,7 +557,8 @@ Convert a [`DateTime`](@ref) `dt` in Julian days since [`J2000`](@ref).
 function j2000(dt::DateTime)
 
     jd1, jd2 = calhms2jd(
-        year(dt), month(dt), day(dt), hour(dt), minute(dt), second(dt) + fraction(dt)
+        year(dt), month(dt), day(dt), hour(dt), minute(dt), 
+        second(dt) + fraction_of_second(dt)
     )
 
     return j2000(jd1, jd2)

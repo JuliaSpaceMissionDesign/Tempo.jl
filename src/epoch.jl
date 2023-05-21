@@ -163,14 +163,14 @@ timescale(ep::Epoch) = ep.scale
 
 Full `Epoch` value.
 """
-value(ep::Epoch) = ep.seconds
+@inline value(ep::Epoch) = ep.seconds + ep.fraction
 
 """
     j2000(e::Epoch)
 
 Convert `Epoch` in Julian Date days since [`J2000`](@ref).
 """
-j2000(e::Epoch) = e.seconds / DAY2SEC
+j2000(e::Epoch) = value(e) / DAY2SEC
 
 """
     j2000s(e::Epoch)
@@ -193,17 +193,17 @@ end
 # ----
 # Operations
 
-Base.:-(e1::Epoch{S}, e2::Epoch{S}) where {S} = e1.seconds - e2.seconds
+Base.:-(e1::Epoch{S}, e2::Epoch{S}) where S = value(e1) - value(e2)
 
-Base.:+(e::Epoch, x::Number) = Epoch(e.seconds + x, timescale(e))
-Base.:-(e::Epoch, x::Number) = Epoch(e.seconds - x, timescale(e))
+Base.:+(e::Epoch, x::Number) = Epoch(value(e) + x, timescale(e))
+Base.:-(e::Epoch, x::Number) = Epoch(value(e) - x, timescale(e))
 
 function (::Base.Colon)(start::Epoch, step::AbstractFloat, stop::Epoch)
     step = start < stop ? step : -step
     return StepRangeLen(start, step, floor(Int64, (stop - start) / step) + 1)
 end
 
-(::Base.Colon)(start::Epoch, stop::Epoch) = (:)(start, 86400.0, stop)
+(::Base.Colon)(start::Epoch, stop::Epoch) = (:)(start, 86400, stop)
 
 Base.isless(e1::Epoch{S}, e2::Epoch{S}) where {S} = value(e1) < value(e2)
 
@@ -232,7 +232,7 @@ function Base.convert(
 ) where {S1 <: AbstractTimeScale, S2 <: AbstractTimeScale}
 
     try
-        return Epoch{S2}(apply_offsets(system, e.seconds, timescale(e), to))
+        return Epoch{S2}(apply_offsets(system, value(e), timescale(e), to))
 
     catch
         throw(EpochConversionError("cannot convert Epoch from the timescale $S1 to $S2."))
@@ -247,11 +247,10 @@ Construct a `DateTime` object from an [`Epoch`](@ref).
 """
 function DateTime(ep::Epoch)
 
-    y, m, d, H, M, S = jd2calhms(DJ2000, ep.seconds / DAY2SEC)
-    fint = floor(Int64, S)
-    f = S - fint
+    y, m, d, H, M, S = jd2calhms(DJ2000, j2000(ep))
+    s, f = divrem(S, 1)
 
-    return DateTime(y, m, d, H, M, fint, f)
+    return DateTime(y, m, d, H, M, convert(Int, s), f)
     
 end
 
