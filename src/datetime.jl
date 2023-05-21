@@ -539,8 +539,13 @@ as first argument, the returned value will also account for the fraction of seco
 """
 second(::Type{T}, dt::DateTime) where T = second(T, Time(dt))
 second(dt::DateTime) = second(Time(dt))
-# FIXME: qui sopra quale valore si vuole ritornare? Dovrebbe essere consistente con 
-# l'utilizzo in `Time`
+
+"""
+    fraction(d::DateTime)
+
+Get the fraction of seconds associated to a [`DateTime`](@ref) object.
+"""
+fraction(dt::DateTime) = fraction_of_second(Time(dt))
 
 Base.show(io::IO, dt::DateTime) = print(io, Date(dt), "T", Time(dt))
 
@@ -550,8 +555,13 @@ Base.show(io::IO, dt::DateTime) = print(io, Date(dt), "T", Time(dt))
 Convert a [`DateTime`](@ref) `dt` in Julian days since [`J2000`](@ref).
 """
 function j2000(dt::DateTime)
-    jd1, jd2 = calhms2jd(year(dt), month(dt), day(dt), hour(dt), minute(dt), second(dt))
+
+    jd1, jd2 = calhms2jd(
+        year(dt), month(dt), day(dt), hour(dt), minute(dt), second(dt) + fraction(dt)
+    )
+
     return j2000(jd1, jd2)
+
 end
 
 """
