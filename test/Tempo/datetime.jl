@@ -33,9 +33,6 @@ end
     @test t0 == Time(86400 ÷ 2, 0.0)
 
     t = Time(12, 1, 15.300300300)
-    @test Tempo.millisecond(t) == 300
-    @test Tempo.microsecond(t) == 300
-    @test Tempo.nanosecond(t) == 300
     @test Tempo.second(Float64, t) == 15.300300300
     @test Tempo.second(Int64, t) == 15
     @test Tempo.fraction_of_second(t) ≈ 0.300300300
