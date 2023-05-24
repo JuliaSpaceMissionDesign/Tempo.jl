@@ -282,41 +282,6 @@ second(::Type{<:AbstractFloat}, t::Time) = t.fraction + t.second
 second(::Type{<:Integer}, t::Time) = t.second
 second(t::Time) = second(Int, t)
 
-function subsecond(fraction, n, r)
-    n % 3 == 0 || throw(ArgumentError("`n` must be divisible by 3."))
-    factor = ifelse(Int === Int32, widen(10), 10)^n
-    rounded = round(fraction, r; digits=n)
-    return round(Int, rounded * factor, r) % 1000
-end
-
-function subsecond(fraction, n)
-    r = ifelse(subsecond(fraction, n + 3, RoundNearest) == 0, RoundNearest, RoundToZero)
-    return subsecond(fraction, n, r)
-end
-
-subsecond(t::Time, n) = subsecond(t.fraction, n)
-
-"""
-    millisecond(t::Time)
-
-Get the current millisecond.
-"""
-millisecond(t::Time) = subsecond(t.fraction, 3)
-
-"""
-    microsecond(t::Time)
-
-Get the current microsecond.
-"""
-microsecond(t::Time) = subsecond(t.fraction, 6)
-
-"""
-    nanosecond(t::Time)
-
-Get the current nanosecond.
-"""
-nanosecond(t::Time) = subsecond(t.fraction, 9)
-
 hms2fd(t::Time) = hms2fd(t.hour, t.minute, t.second + t.fraction)
 
 """
@@ -374,9 +339,9 @@ second_in_day(t::Time) = t.fraction + t.second + 60 * t.minute + 3600 * t.hour
 function Base.show(io::IO, t::Time)
     h = lpad(hour(t), 2, '0')
     m = lpad(minute(t), 2, '0')
-    s = lpad(second(t), 2, '0')
-    f = lpad(millisecond(t), 3, '0')
-    return print(io, h, ":", m, ":", s, ".", f)
+    s = second(t) + fraction_of_second(t)
+    sf = lpad(round(s, digits=4), 7, '0')
+    return print(io, h, ":", m, ":", sf)
 end
 
 

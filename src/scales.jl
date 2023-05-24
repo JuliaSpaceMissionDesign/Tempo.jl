@@ -201,6 +201,7 @@ function _zero_offset(seconds::T) where {T}
     return T(0.0)
 end
 
+#TODO: finish documentation!
 """ 
     add_timescale!(system::TimeSystem, scale::AbstractTimeScale)
 

@@ -46,31 +46,28 @@ A `TimeScale` can be added at the end of the string, separated by a whitespace.
 If it is not declared, [`TDB`](@ref) will be used as a default timescale. 
 
 ### Examples 
-# FIXME: non mi fanno impazzire i commenti nella REPL, se li togliessimo oppure mettessimo 
-i vari esempi spezzettati? 
-
 ```julia-repl 
-julia> # standard ISO string 
+# standard ISO string 
 julia> Epoch("2050-01-01T12:35:15.0000 TT")
 2050-01-01T12:35:14.9999 TT
 
-julia> # standard ISO string (without scale)
+# standard ISO string (without scale)
 julia> Epoch("2050-01-01T12:35:15.0000")
 2050-01-01T12:35:14.9999 TDB
 
-julia> # Parse Julian Dates 
+# Parse Julian Dates 
 julia> Epoch("JD 2400000.5")
 1858-11-17T00:00:00.0000 TDB
 
-julia> # Parse Modified Julian Dates
+# Parse Modified Julian Dates
 julia> Epoch("MJD 51544.5")
 2000-01-01T12:00:00.0000 TDB
 
-julia> # Parse Julian Dates since J2000 
+# Parse Julian Dates since J2000 
 julia> Epoch("12.0")
 2000-01-13T12:00:00.0000 TDB
 
-julia> # All Julian Date parsers allow timescales 
+# All Julian Date parsers allow timescales 
 julia> Epoch("12.0 TT")
 2000-01-13T12:00:00.0000 TT
 """

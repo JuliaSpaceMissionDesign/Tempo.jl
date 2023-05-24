@@ -29,15 +29,12 @@ end
 """
     find_year(d::Integer)
 
-Return the Gregorian year associated to the given Julian Date day `d`.
+Return the Gregorian year associated to the given Julian Date day `d` since [`J2000`](@ref).
 """
 function find_year(d::Integer)
     
     j2d = ifelse(d isa Int32, widen(d), d)
     year = (400 * j2d + 292194288) ÷ 146097
-
-    # FIXME: ma questa quindi è la julian date rispetto a J2000 vero? 
-    # da aggiornare docs in caso 
 
     # The previous estimate is one unit too high in some rare cases
     # (240 days in the 400 years gregorian cycle, about 0.16%)
@@ -77,7 +74,7 @@ end
     lastj2000dayofyear(year::Integer)
 """
 function lastj2000dayofyear(year::Integer)
-    # FIXME: da documentare la roba che fa questa qua
+    # TODO: da documentare la roba che fa questa qua
     return 365 * year + year ÷ 4 - year ÷ 100 + year ÷ 400 - 730120
 end
 
