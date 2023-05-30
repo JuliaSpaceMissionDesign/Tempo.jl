@@ -301,10 +301,6 @@ function jd2cal(dj1::Number, dj2::Number)
     f2 = mod(d2, 1)
     fd = mod(f1 + f2, 1)
 
-    if fd < 0
-        fd += 1
-    end
-
     d = round(Int, d1 - f1) + round(Int, d2 - f2) + round(Int, f1 + f2 - fd)
     jd = round(Int, d) + 1
 
