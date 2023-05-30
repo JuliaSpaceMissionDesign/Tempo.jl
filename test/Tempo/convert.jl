@@ -48,6 +48,34 @@ end
     @test_throws DomainError Tempo.fd2hmsf(1.5)
 end
 
+@testset "Function jd2cal" begin 
+    
+    @test Tempo.jd2cal(Tempo.DJ2000, 0.0) == (2000, 1, 1, 0.5)
+    @test_throws DomainError Tempo.jd2cal(1e10, 0.0)
+    @test_throws DomainError Tempo.jd2cal(-68569.4, -1.0) 
+
+    # Test with negative dates 
+    jd1, jd2 = Tempo.calhms2jd(1840, 1, 13, 12, 32, 41)
+    @test Tempo.jd2cal(jd1, jd2)[1:3] == (1840, 1, 13)
+
+    # Test against ERFA 
+    for _ in 1:250
+        
+        jd1 = -10000 + 20000*rand()
+        jd2 = Tempo.DJ2000 
+
+
+        ye, me, de, fe = ERFA.jd2cal(jd1, jd2)
+        yt, mt, dt, ft = Tempo.jd2cal(jd1, jd2) 
+        
+        @test ye == yt 
+        @test me == mt 
+        @test de == dt 
+        @test fe ≈ ft atol=1e-11 rtol=1e-11
+        
+    end
+end
+
 @testset "Function cal2jd" begin
     Y, M, D = 2022, 6, 15
     h, m, s = 11, 51, 55.05
@@ -116,12 +144,22 @@ end
     for _ in 1:10
         Y, M, D = rand(1975:2015), rand(1:12), rand(1:28)
         h, m, s = rand(0:23), rand(0:59), rand(0.0:0.0001:59.999)
+        
+        # TODO: sistemare utc2tai qui
         utc1, utc2 = Tempo.calhms2jd(Y, M, D, h, m, s)
         tai1, tai2 = Tempo.utc2tai(utc1, utc2)
-        u1, u2 = Tempo.tai2utc(tai1, tai2)
 
-        @test u1 ≈ utc1 atol=1e-11 rtol=1e-11
-        @test u2 ≈ utc2 atol=1e-11 rtol=1e-11
+        invOrder = rand([false, true])
+        tms = invOrder ? (tai2, tai1) : (tai1, tai2)
+        u1, u2 = Tempo.tai2utc(tms...)
+
+        if invOrder 
+            @test u1 ≈ utc2 atol=1e-11 rtol=1e-11
+            @test u2 ≈ utc1 atol=1e-11 rtol=1e-11
+        else 
+            @test u1 ≈ utc1 atol=1e-11 rtol=1e-11
+            @test u2 ≈ utc2 atol=1e-11 rtol=1e-11
+        end
     end
 
     # test limit case
@@ -146,4 +184,27 @@ end
         @test utc2 ≈ utc2e atol=1e-11 rtol=1e-11 
         @test utc1 ≈ utc1e atol=1e-11 rtol=1e-11
     end
+end
+
+@testset "JulianDates" begin 
+
+    @test j2000(DJ2000)  ≈ 0 atol=1e-11 rtol=1e-11 
+    @test j2000s(DJ2000) ≈ 0 atol=1e-11 rtol=1e-11
+    @test j2000c(DJ2000) ≈ 0 atol=1e-11 rtol=1e-11
+
+    for _ in 1:250 
+        jd1 = DJ2000 
+        jd2 = -10000 + 20000*rand()
+
+        @test j2000(jd1+jd2) ≈ j2000(jd1, jd2) atol=1e-11 rtol=1e-11
+
+        @test j2000c(jd1, jd2)*Tempo.CENTURY2DAY ≈ j2000(jd1, jd2) atol=1e-11 rtol=1e-11
+        @test j2000c(jd1+jd2)*Tempo.CENTURY2DAY ≈ j2000(jd1+jd2) atol=1e-11 rtol=1e-11
+
+        @test j2000s(jd1, jd2) ≈ j2000(jd1, jd2)*86400 atol=1e-11 rtol=1e-11
+        @test j2000s(jd1+jd2) ≈ j2000(jd1+jd2)*86400 atol=1e-11 rtol=1e-11 
+
+    end
+
+
 end

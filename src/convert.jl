@@ -267,7 +267,7 @@ julia> Tempo.jd2cal(DJ2000 + 365, 0.5)
     | 2450123.5 	| 0.2     	| (date & time method) 	|
 
 !!! warning
-    The earliest valid date is 0 (-4713 Jan 1). The largest value accepted is 1e9.
+    The earliest valid date is -68569.5 (-4713 Jan 1). The largest value accepted is 1e9.
 
 ### References
 - Seidelmann P. K., (1992), Explanatory Supplement to the Astronomical Almanac,
