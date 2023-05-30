@@ -11,13 +11,16 @@
     fd = Tempo.hms2fd(ihour, imin, sec)
 
     for origin in Tempo.EPOCH_ORIGIN_ACRONYMS
-        # test parser
+        # test parser (TODO: remake!)
         @test Tempo.tryparse(Val(origin)) == eval(origin)
-
+        
         jd1 -= Tempo.offset(Tempo.tryparse(Val(origin)))
         jd2 += Tempo.offset(Tempo.tryparse(Val(origin)))
 
         # transform back to date  
         @test all(Tempo.jd2cal(jd1, jd2) .≈ (iy, im, id, fd))
     end
+    
+    @test repr(Tempo.MJD2000) == "MJD2000"
+
 end

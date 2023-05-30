@@ -3,12 +3,25 @@
 
     dt = DateTime("2004-05-14T16:43:32.0000")
     e = Epoch(dt, TDB)
+
     @test Epoch(dt, TDB) == Epoch("2004-05-14T16:43:32.0000 TDB")        
     @test Epoch(86400.0, Tempo.TerrestrialTime) == Epoch("2000-01-02T12:00:00.0000 TT")
     @test Epoch(dt, Tempo.TerrestrialTime) == Epoch("2004-05-14T16:43:32.0000 TT")
     @test Epoch(e) == e
+
+    @test repr(e) == "2004-05-14T16:43:32.0000 TDB"
+
+    epn = Epoch{BarycentricDynamicalTime, BigFloat}(e) 
+    @test typeof(epn) == Epoch{BarycentricDynamicalTime, BigFloat}
+    @test typeof(j2000s(epn)) == BigFloat 
+    @test j2000s(epn) ≈ j2000s(e) atol=1e-12 rtol=1e-12
+
     @test convert(TDB, e) == e
     @test convert(BarycentricDynamicalTime, e) == e
+    @test convert(Float64, e) == e
+    
+    @test typeof(convert(BigFloat, e)) == typeof(epn)
+    @test j2000s(convert(BigFloat, e)) == j2000s(epn) 
 
     @testset "String constructors" begin
         s, ry, rm, rd, rH, rM, rS, rF = _random_epoch()
