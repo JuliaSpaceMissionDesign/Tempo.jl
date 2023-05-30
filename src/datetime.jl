@@ -95,6 +95,10 @@ end
 # Constructor given a date and the number of days since that date
 Date(d::Date, offset::Integer) = Date(convert(Int, j2000(d)) + offset)
 
+function Base.show(io::IO, d::Date)
+    return print(io, year(d), "-", lpad(month(d), 2, '0'), "-", lpad(day(d), 2, '0'))
+end
+
 """
     year(d::Date)
 
@@ -148,11 +152,6 @@ Convert Gregorian calendar date [`Date`](@ref) to a Julian Date since [`J2000`](
 in days.
 """
 j2000(d::Date) = j2000(cal2jd(d)...)
-
-
-function Base.show(io::IO, d::Date)
-    return print(io, year(d), "-", lpad(month(d), 2, '0'), "-", lpad(day(d), 2, '0'))
-end
 
 # Operations 
 function Base.isapprox(a::Date, b::Date; kwargs...)
@@ -257,6 +256,15 @@ function Time(secondinday::Number)
     return Time(convert(Int, sec), frac)
 end
 
+function Base.show(io::IO, t::Time)
+    h  = lpad(hour(t), 2, '0')
+    m  = lpad(minute(t), 2, '0')
+    s  = lpad(second(t), 2, '0')
+    sf = lpad(convert(Int, round(1e4*fraction_of_second(t), digits=0)), 4, '0')
+
+    return print(io, h, ":", m, ":", s, ".", sf)
+end
+
 """
     hour(t::Time)
 
@@ -335,15 +343,6 @@ julia> Tempo.second_in_day(t)
 ```
 """
 second_in_day(t::Time) = t.fraction + t.second + 60 * t.minute + 3600 * t.hour
-
-function Base.show(io::IO, t::Time)
-    h = lpad(hour(t), 2, '0')
-    m = lpad(minute(t), 2, '0')
-    s = second(t) + fraction_of_second(t)
-    sf = lpad(round(s, digits=4), 7, '0')
-    return print(io, h, ":", m, ":", sf)
-end
-
 
 # -------------------------------------
 # DATETIME
@@ -457,6 +456,8 @@ end
 
 DateTime{T}(dt::DateTime{T}) where {T} = dt
 
+Base.show(io::IO, dt::DateTime) = print(io, Date(dt), "T", Time(dt))
+
 @inline Date(dt::DateTime) = dt.date
 @inline Time(dt::DateTime) = dt.time
 
@@ -511,8 +512,6 @@ second(dt::DateTime) = second(Time(dt))
 Get the fraction of seconds associated to a [`DateTime`](@ref) object.
 """
 fraction_of_second(dt::DateTime) = fraction_of_second(Time(dt))
-
-Base.show(io::IO, dt::DateTime) = print(io, Date(dt), "T", Time(dt))
 
 """
     j2000(dt::DateTime)
