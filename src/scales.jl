@@ -197,6 +197,7 @@ macro timescale(name::Symbol, id::Int, type::Union{Symbol, Nothing}=nothing)
 end
 
 function _zero_offset(seconds::T) where {T}
+    # TODO: why not make it a blocking error?
     @error "a zero-offset transformation has been applied in the TimeSystem"
     return T(0.0)
 end
@@ -230,13 +231,14 @@ function add_timescale!(
     end
 
     # Check if timescale with the same name also does not already exist
-    if name in map(x -> x.name, timescales(ts).nodes)
-        throw(
-            ArgumentError(
-                "TimeScale with name $name is already registered in the given TimeSystem"
-            )
-        )
-    end
+    # Timescales with the same ID but different names cannot exist be created, because
+    # it would throw "invalid redefinition of constant NAME"
+
+    # if name in map(x -> x.name, timescales(ts).nodes)
+    #     throw(ArgumentError(
+    #             "TimeScale with name $name is already registered in the given TimeSystem"
+    #     ))
+    # end
 
     if isnothing(parent)
         # If a root-timescale exists, check that a parent has been specified 
