@@ -202,10 +202,40 @@ function _zero_offset(seconds::T) where {T}
     return T(0.0)
 end
 
-#TODO: finish documentation!
 """ 
-    add_timescale!(system::TimeSystem, scale::AbstractTimeScale)
+    add_timescale!(system::TimeSystem, scale::AbstractTimeScale, ffp::Function; ftp, parent)
 
+Add `scale` as a timescale to `system`. A custom function `ffp` providing the time offset, 
+in seconds, between the `parent` scale and the current scale must be provided by the user. 
+
+The `parent` and `ffp` arguments are unneeded only for the root timescale. If the user 
+wishes to add a scale to a non-empty timesystem, this argument becomes mandatory.
+
+The input functions must accept only the seconds in the parent scale as argument and must 
+return a single numerical output. An optional function `ftp`, with a similar interface,
+returning the offset from the current to the parent scale may also be provided. 
+
+!!! note 
+    If `ftp` is not provided, the reverse timescale transformation will not be possible. 
+
+### Examples 
+```julia-repl
+julia> SYSTEM = TimeSystem{Float64}();
+
+julia> @timescale RTS 102 RootTimeScale
+
+julia> @timescale CTS 103 ChildTimeScale
+
+julia> root_to_child(x::Number) = 13.3;
+
+julia> child_to_root(x::Number) = -13.3;
+
+julia> add_timescale!(SYSTEM, RTS)
+
+julia> add_timescale!(SYSTEM, CTS, root_to_child; parent=RTS, ftp=child_to_root)
+
+### See also 
+See also [`@timescale`](@ref), [`TimeSystem`](@ref) and [`apply_offsets`](@ref).
 """
 function add_timescale!(
     ts::TimeSystem{T}, 

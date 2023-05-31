@@ -54,6 +54,15 @@
         @test Epoch(0.0, TDB) ≈ Epoch("2000-01-01T12:00:00.0000 TDB")
     end
 
+    # Colon Operator
+    e1 = Epoch("2004-05-14T16:43:00 UTC")
+    e2 = e1 + floor(10000*rand())*86400
+
+    ems = e1:e2 
+    for j = 2:lastindex(ems)
+        @test ems[j] == e1 + 86400*(j-1)
+    end
+
     # Based on Vallado "Fundamental of astrodynamics" page 196
     e = Epoch("2004-05-14T16:43:00 UTC")
     @test DateTime("2004-05-14T16:43:32.0000") ≈ DateTime(convert(TAI, e))
