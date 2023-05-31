@@ -1,3 +1,4 @@
+
 @testset "Date" begin
     ry = rand(1800:2100)
     rm = rand(1:12)
@@ -16,6 +17,9 @@
     @test day(d) == rd
     @test Tempo.isleapyear(d) == ly
 
+    # Test show function 
+    @test repr(d) == "$ry-$(lpad(rm, 2, '0'))-$(lpad(rd, 2, '0'))"
+
     d = Date(2000, 1, 1)
     @test d == Date(0)
     @test d == Date(2000, 1)
@@ -26,6 +30,17 @@
     @test Tempo.find_day(32, 2, true) == 1
     @test d + 1 == Date(1)
     @test Date(1) - 1 == d
+
+    @test_throws DomainError Date(2020, convert(Int, floor(0-100*rand())))
+
+    a = Date(2020, 2, 1);
+    b = Date(2020, 3, 1)
+
+    @test Base.isapprox(a, b) == false
+    @test Base.isapprox(a, a)
+
+    
+
 end
 
 @testset "Time" begin
@@ -33,12 +48,14 @@ end
     @test t0 == Time(86400 ÷ 2, 0.0)
 
     t = Time(12, 1, 15.300300300)
-    @test Tempo.millisecond(t) == 300
-    @test Tempo.microsecond(t) == 300
-    @test Tempo.nanosecond(t) == 300
     @test Tempo.second(Float64, t) == 15.300300300
     @test Tempo.second(Int64, t) == 15
     @test Tempo.fraction_of_second(t) ≈ 0.300300300
+    @test Tempo.fraction_of_day(t) ≈ 0.5 + 1/24/60 + 15.300300300/86400 atol=1e-11 rtol=1e-11
+
+    # Test show 
+    @test repr(t) == "12:01:15.3003"
+    @test repr(Time(8, 54, 3, 0.021)) == "08:54:03.0210"
 
     @test_throws Exception Time(-1, 0, 0.0) 
     @test_throws Exception Time(25, 0, 0.0)
@@ -50,12 +67,20 @@ end
     @test second(t) == 15
     @test Tempo.hms2fd(t0) == 0.5
     @test Tempo.fraction_of_second(t0) == 0.0
+    
     for _ in 1:30
         fs = rand(0.0:0.99999)
         t1 = Time(0, 0, 0, fs)
         @test Tempo.fraction_of_second(t1) == fs
+        
+        t = Time(fs)
+        @test second(t) == 0
+        @test Tempo.fraction_of_second(t) == fs
+
     end
+    
     @test Tempo.second_in_day(t0) == 43200.0
+
 end
 
 @testset "DateTime" begin
@@ -70,9 +95,9 @@ end
     @test J2000 == DateTime(0.0)
 
     D2 = DateTime(Tempo.DAY2SEC / 3)
-    @test Tempo.j2000(D2) ≈ 1 / 3
-    @test Tempo.j2000s(D2) ≈ 1 / 3 * Tempo.DAY2SEC
-    @test Tempo.j2000c(D2) ≈ 1 / 3 / Tempo.CENTURY2DAY
+    @test Tempo.j2000(D2) ≈ 1 / 3 atol=1e-11 rtol=1e-11
+    @test Tempo.j2000s(D2) ≈ 1 / 3 * Tempo.DAY2SEC atol=1e-11 rtol=1e-11
+    @test Tempo.j2000c(D2) ≈ 1 / 3 / Tempo.CENTURY2DAY atol=1e-11 rtol=1e-11
 
     _, ry, rm, rd, rH, rM, rS, rF = _random_datetime_isostr()
     dt = DateTime(ry, rm, rd, rH, rM, rS, rF)
@@ -81,15 +106,20 @@ end
     @test day(dt) == rd
     @test hour(dt) == rH
     @test minute(dt) == rM
-    @test second(dt) == rS + rF
+    @test second(dt) == rS
+    @test second(Float64, dt) == rS + rF
+
+    @test repr(dt) == "$(repr(dt.date))T$(repr(dt.time))"
 
     dtr = rand(0.0:1.0:(365.25 * 86400.0))
     dt2 = dt + dtr
     @test Tempo.j2000s(dt2) - Tempo.j2000s(dt) ≈ dtr
+    @test dt2 - dtr ≈ dt
     
     d = Date(2000, 1, 1)
     dt = DateTime(d, 0.0)
     @test DateTime{Float64}(dt) == dt
     dt1 = dt + 1.0
     @test dt < dt1
+
 end

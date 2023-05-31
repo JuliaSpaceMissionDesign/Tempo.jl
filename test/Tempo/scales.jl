@@ -16,9 +16,9 @@ S = Tempo.TimeSystem{Float64}()
 @timescale DTS 4 DTimeScale
 @timescale ETS 5 ETimeScale
 
-Tempo.add_timescale(S, ATS, Tempo._zero_offset)
-Tempo.add_timescale(S, BTS, _one_offset; parent=ATS, ftp=_mone_offset)
-Tempo.add_timescale(S, CTS, _one_offset; parent=BTS, ftp=_mone_offset)
+Tempo.add_timescale!(S, ATS, Tempo._zero_offset)
+Tempo.add_timescale!(S, BTS, _one_offset; parent=ATS, ftp=_mone_offset)
+Tempo.add_timescale!(S, CTS, _one_offset; parent=BTS, ftp=_mone_offset)
 
 struct CustomTimeScale <: Tempo.AbstractTimeScale end
 
@@ -33,12 +33,19 @@ struct CustomTimeScale <: Tempo.AbstractTimeScale end
     @test isnothing(Tempo.timescale_name(CustomTimeScale()))
 
     # same id
-    @test_throws Exception Tempo.add_timescale(S, DTSerr, Tempo._zero_offset)
+    @test_throws Exception Tempo.add_timescale!(S, DTSerr, Tempo._zero_offset)
     # root point
-    @test_throws Exception Tempo.add_timescale(S, DTS, Tempo._zero_offset)
+    @test_throws Exception Tempo.add_timescale!(S, DTS, Tempo._zero_offset)
     # parent not registered 
-    @test_throws Exception Tempo.add_timescale(S, ETS, Tempo._zero_offset; parent=DTS)
+    @test_throws Exception Tempo.add_timescale!(S, ETS, Tempo._zero_offset; parent=DTS)
     
+    # test leapseconds 
+    io = IOBuffer();
+    print(IOContext(io, :limit => true), Tempo.LEAPSECONDS.lastupdate)
+    s = "Leapseconds(last_update=$(String(take!(io))))\n"
+
+    @test repr(Tempo.LEAPSECONDS) == s
+
     @testset "apply_offsets" begin
         D2S = 86400.0
 

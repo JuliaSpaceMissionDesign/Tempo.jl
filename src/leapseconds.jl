@@ -1,3 +1,4 @@
+
 """
     get_leapseconds()
 
@@ -32,8 +33,8 @@ end
 """
     Leapseconds{T}
 
-Stores information about leap seconds that have been added to Coordinated Universal Time (UTC) 
-since the start of the year 2000.
+Stores information about the leap seconds that have been added to Coordinated Universal Time 
+(UTC).
 
 ### Fields
 - `lastupdate`: a `DatesDateTime` object representing the date and time when the Leapseconds 

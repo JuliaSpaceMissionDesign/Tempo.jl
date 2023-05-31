@@ -27,23 +27,76 @@ function find_dayinyear(month::Integer, day::Integer, isleap::Bool)
 end
 
 """
-    hms2fd(h::Integer, m::Integer, s::Number)
+    find_year(d::Integer)
+
+Return the Gregorian year associated to the given Julian Date day `d` since [`J2000`](@ref).
+"""
+function find_year(d::Integer)
+    
+    j2d = ifelse(d isa Int32, widen(d), d)
+    year = (400 * j2d + 292194288) ÷ 146097
+
+    # The previous estimate is one unit too high in some rare cases
+    # (240 days in the 400 years gregorian cycle, about 0.16%)
+    if j2d <= lastj2000dayofyear(year - 1)
+        year -= 1
+    end
+
+    return year
+end
+
+"""
+    find_month(dayinyear::Integer, isleap::Bool)
+
+Find the month from the day of the year, depending on whether the year is leap or not.
+"""
+function find_month(dayinyear::Integer, isleap::Bool)
+    offset = ifelse(isleap, 313, 323)
+    return ifelse(dayinyear < 32, 1, (10 * dayinyear + offset) ÷ 306)
+end
+
+"""
+    find_day(dayinyear::Integer, month::Integer, isleap::Bool)
+
+Find the day of the month from the day in the year and the month, depending on whether the 
+year is leap or not.
+"""
+function find_day(dayinyear::Integer, month::Integer, isleap::Bool)
+    
+    (!isleap && dayinyear > 365) && throw(
+        DomainError(dayinyear, " the day cannot be greater than 366 for a non-leap year."),
+    )
+    previous_days = ifelse(isleap, PREVIOUS_MONTH_END_DAY_LEAP, PREVIOUS_MONTH_END_DAY)
+    return dayinyear - previous_days[month]
+end
+
+""" 
+    lastj2000dayofyear(year::Integer)
+"""
+function lastj2000dayofyear(year::Integer)
+    # TODO: da documentare la roba che fa questa qua
+    return 365 * year + year ÷ 4 - year ÷ 100 + year ÷ 400 - 730120
+end
+
+"""
+    hms2fd(hour::Integer, minute::Integer, second::Number)
 
 Convert hours, minutes and seconds to day fraction.
+
+### Examples 
+```julia-repl
+julia> Tempo.hms2fd(12, 0.0, 0.0)
+0.5
 """
 function hms2fd(h::Integer, m::Integer, s::Number)
 
     # Validate arguments
     if h < 0 || h > 23
-        throw(DomainError("invalid hour provided, must be between 0 and 23"))
+        throw(DomainError(h, "the hour shall be between 0 and 23."))
     elseif m < 0 || m > 59
-        throw(DomainError("invalid minutes provided, must be between 0 and 59"))
+        throw(DomainError(m, "the minutes must be between 0 and 59."))
     elseif s < 0 || s >= 60
-        throw(
-            DomainError(
-                "invalid seconds provided, must be between 0.0 and 59.99999999999999"
-            ),
-        )
+        throw(DomainError(s, "the seconds must be between 0.0 and 59.99999999999999."))
     end
 
     return ((60 * (60 * h + m)) + s) / 86400
@@ -60,8 +113,8 @@ function fd2hms(fd::Number)
     secinday = fd * 86400
     if secinday < 0 || secinday > 86400
         throw(
-            DomainError(
-                "seconds are out of range: must be between 0 and 86400, provided $secinday"
+            DomainError(secinday, 
+                "seconds are out of range: they must be between 0 and 86400."
             ),
         )
     end
@@ -79,6 +132,12 @@ end
     fd2hmsf(fd::Number) 
 
 Convert the day fraction `fd` to hour, minute, second and fraction of seconds.
+
+### Examples 
+```julia-repl
+julia> Tempo.fd2hms(0.5)
+(12, 0, 0.0)
+```
 """
 function fd2hmsf(fd::Number)
 
@@ -95,7 +154,7 @@ end
 
 This function converts a given date in the Gregorian calendar (year, month, day) to the 
 corresponding two-parts Julian Date. The first part is the [`DJ2000`](@ref), while the 
-second output is the number of days since [`DJ2000`](@ref).
+second output is the number of days since [`J2000`](@ref).
 
 The year must be greater than 1583, and the month must be between 1 and 12. The day must 
 also be valid, taking into account whether the year is a leap year. If the input year or 
@@ -103,13 +162,15 @@ month or day are invalid, a `DomainError` is thrown.
 
 ### Examples 
 ```julia-repl
-julia> cal2jd(2021, 1, 1)
+julia> Tempo.cal2jd(2021, 1, 1)
 (2.4000005e6, 59215.0)
 
-julia> cal2jd(2022, 2, 28)
+julia> Tempo.cal2jd(2022, 2, 28)
 (2.4000005e6, 59638.0)
 
-#TODO: add example for epoch conversion error
+julia> Tempo.cal2jd(2019, 2, 29)
+ERROR: DomainError with 29:
+the day shall be between 1 and 28.
 ```
 
 ### References
@@ -120,12 +181,13 @@ julia> cal2jd(2022, 2, 28)
 - [ERFA software library](https://github.com/liberfa/erfa/blob/master/src/cal2jd.c)
 """
 function cal2jd(Y::Integer, M::Integer, D::Integer)
+    
     # Validate year and month
     if Y < 1583
-        throw(DomainError("invalid year provided, must be greater than 1583"))
+        throw(DomainError(Y, "the year shall be greater than 1583."))
 
     elseif M < 1 || M > 12
-        throw(DomainError("invalid month provided, must be between 1 and 12"))
+        throw(DomainError(M, "the month shall be between 1 and 12."))
     end
 
     # If February in a leap year, 1, otherwise 0
@@ -134,7 +196,7 @@ function cal2jd(Y::Integer, M::Integer, D::Integer)
 
     # Validate day, taking into account leap years
     if (D < 1) || (D > (MTAB[M] + ly))
-        throw(DomainError("invalid day provided, shall be between 1 and $(MTAB[M]+ly)"))
+        throw(DomainError(D, "the day shall be between 1 and $(MTAB[M]+ly)."))
     end
 
     Y = Y - 1
@@ -146,13 +208,23 @@ function cal2jd(Y::Integer, M::Integer, D::Integer)
     d = d1 + d2
 
     return DJ2000, d
+    
 end
 
 """
     calhms2jd(year, month, day, hour, minute, seconds) 
 
 Convert Gregorian Calendar date and time to a two-parts Julian Date. The first part 
-is the [`DJ2000`](@ref), while the second output is the number of days since [`DJ2000`](@ref).
+is the [`DJ2000`](@ref), while the second output is the number of days since [`J2000`](@ref).
+
+### Examples 
+```julia-repl
+julia> Tempo.calhms2jd(2000, 1, 1, 12, 0, 0)
+(2.451545e6, 0.0)
+
+julia> Tempo.calhms2jd(2022, 1, 1, 0, 0, 0)
+(2.451545e6, 8035.5)
+```
 """
 function calhms2jd(Y::I, M::I, D::I, h::I, m::I, sec::N) where {I <: Integer, N <: Number}
     
@@ -169,12 +241,18 @@ end
 This function converts a given Julian Date (JD) to a Gregorian calendar date 
 (year, month, day, and fraction of a day).
 
-The JD is composed of two input arguments, `dj1` and `dj2`, which can be apportioned in any 
-convenient way. For example, JD 2450123.7 could be expressed as `dj1 = 2450123.7` and `dj2 = 0.0`, 
-or as `dj1 = 2451545.0` and `dj2 = -1421.3`, or in any of the other ways listed in the documentation.
+### Examples 
 
-The earliest valid date that can be converted is -4713 Jan 1, and the largest value accepted 
-is 1e9. If the input JD is outside this range, an `EpochConversionError` is thrown.
+```julia-repl
+julia> Tempo.jd2cal(DJ2000, 0.0)
+(2000, 1, 1, 0.5)
+
+julia> Tempo.jd2cal(DJ2000, 365.5)
+(2001, 1, 1, 0.0)
+
+julia> Tempo.jd2cal(DJ2000 + 365, 0.5)
+(2001, 1, 1, 0.0)
+```
 
 !!! note
     The Julian Date is apportioned in any convenient way between the arguments 
@@ -189,7 +267,7 @@ is 1e9. If the input JD is outside this range, an `EpochConversionError` is thro
     | 2450123.5 	| 0.2     	| (date & time method) 	|
 
 !!! warning
-    The earliest valid date is 0 (-4713 Jan 1). The largest value accepted is 1e9.
+    The earliest valid date is -68569.5 (-4713 Jan 1). The largest value accepted is 1e9.
 
 ### References
 - Seidelmann P. K., (1992), Explanatory Supplement to the Astronomical Almanac,
@@ -205,7 +283,7 @@ function jd2cal(dj1::Number, dj2::Number)
 
     dj = dj1 + dj2
     if dj < -68569.5 || dj > 1e9
-        throw(DomainError("Invalid JD provided, shall be between -68569.5 and 1e9"))
+        throw(DomainError(dj, "the Julian Date shall be between -68569.5 and 1e9."))
     end
 
     # Copy the date, big then small, and re-align to midnight
@@ -222,9 +300,7 @@ function jd2cal(dj1::Number, dj2::Number)
     f1 = mod(d1, 1)
     f2 = mod(d2, 1)
     fd = mod(f1 + f2, 1)
-    if fd < 0
-        fd += 1
-    end
+
     d = round(Int, d1 - f1) + round(Int, d2 - f2) + round(Int, f1 + f2 - fd)
     jd = round(Int, d) + 1
 
@@ -246,6 +322,17 @@ end
 
 Convert a two-parts Julian Date to Gregorian year, month, day, hour, minute, seconds. See 
 [`jd2cal`](@ref) for more information on the Julian Date composition. 
+
+```julia-repl 
+julia> Tempo.jd2calhms(DJ2000, 0.0)
+(2000, 1, 1, 12, 0, 0.0)
+
+julia> Tempo.jd2calhms(DJ2000 + 1, 0.25)
+(2000, 1, 2, 18, 0, 0.0)
+
+julia> Tempo.jd2calhms(DJ2000, 1.25)
+(2000, 1, 2, 18, 0, 0.0)
+```
 """
 function jd2calhms(dj1::Number, dj2::Number)
 

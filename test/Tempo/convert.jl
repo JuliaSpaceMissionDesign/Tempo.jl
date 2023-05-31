@@ -18,7 +18,7 @@ end
         h = rand(0:23)
         m = rand(0:59)
         s = rand(0.0:59.0)
-        @test Tempo.hms2fd(h, m, s) ≈ ((s / 60 + m) / 60 + h) / 24
+        @test Tempo.hms2fd(h, m, s) ≈ ((s / 60 + m) / 60 + h) / 24 atol=1e-11 rtol=1e-11
     end
 
     @test_throws DomainError Tempo.hms2fd(24, 0, 0.0)
@@ -48,12 +48,39 @@ end
     @test_throws DomainError Tempo.fd2hmsf(1.5)
 end
 
+@testset "Function jd2cal" begin 
+    
+    @test Tempo.jd2cal(Tempo.DJ2000, 0.0) == (2000, 1, 1, 0.5)
+    @test_throws DomainError Tempo.jd2cal(1e10, 0.0)
+    @test_throws DomainError Tempo.jd2cal(-68569.4, -1.0) 
+
+    # Test with negative dates 
+    jd1, jd2 = Tempo.calhms2jd(1840, 1, 13, 12, 32, 41)
+    @test Tempo.jd2cal(jd1, jd2)[1:3] == (1840, 1, 13)
+
+    # Test against ERFA 
+    for _ in 1:250
+        
+        jd1 = -10000 + 20000*rand()
+        jd2 = Tempo.DJ2000 
+
+        ye, me, de, fe = ERFA.jd2cal(jd1, jd2)
+        yt, mt, dt, ft = Tempo.jd2cal(jd1, jd2) 
+        
+        @test ye == yt 
+        @test me == mt 
+        @test de == dt 
+        @test fe ≈ ft atol=1e-11 rtol=1e-11
+        
+    end
+end
+
 @testset "Function cal2jd" begin
     Y, M, D = 2022, 6, 15
     h, m, s = 11, 51, 55.05
 
     @test sum(Tempo.cal2jd(Y, M, D)) - 0.5 + Tempo.hms2fd(h, m, s) ≈
-        sum(Tempo.calhms2jd(Y, M, D, h, m, s))
+        sum(Tempo.calhms2jd(Y, M, D, h, m, s)) atol=1e-11 rtol=1e-11
 
     @test_throws DomainError Tempo.cal2jd(
         rand(0:1580), rand(1:12), rand(1:28)
@@ -72,7 +99,7 @@ end
         y, m, d, _, _, _, _ = _random_datetime()
         ejd = sum(ERFA.cal2jd(y, m, d))
         bjd = sum(Tempo.cal2jd(y, m, d))
-        @test ejd + 0.5 ≈ bjd atol = 1e-4
+        @test ejd + 0.5 ≈ bjd atol = 1e-11 rtol=1e-11
     end
 end
 
@@ -81,7 +108,7 @@ end
         y, m, d, H, M, S, f = _random_datetime()
         ejd = sum(ERFA.dtf2d("NONE", y, m, d, H, M, S + f))
         bjd = sum(Tempo.calhms2jd(y, m, d, H, M, S + f))
-        @test ejd ≈ bjd atol = 1e-4
+        @test ejd ≈ bjd atol = 1e-11 rtol=1e-11
     end
 end
 
@@ -94,7 +121,7 @@ end
         @test any((
             (tai2 - utc2) * 86400 ≈ Tempo.leapseconds(utc1 - Tempo.DJ2000 + utc2),
             (tai2 - utc2) * 86400 ≈ Tempo.leapseconds(utc1 - Tempo.DJ2000 + utc2) + 1,
-        ))
+        )) 
     end
 end
 
@@ -107,8 +134,8 @@ end
         tai1, tai2 = Tempo.utc2tai(utc1, utc2)
         tai1e, tai2e = ERFA.utctai(utc1, utc2)
 
-        @test tai2 ≈ tai2e
-        @test tai1 ≈ tai1e
+        @test tai2 ≈ tai2e atol=1e-11 rtol=1e-11
+        @test tai1 ≈ tai1e atol=1e-11 rtol=1e-11
     end
 end
 
@@ -116,12 +143,18 @@ end
     for _ in 1:10
         Y, M, D = rand(1975:2015), rand(1:12), rand(1:28)
         h, m, s = rand(0:23), rand(0:59), rand(0.0:0.0001:59.999)
+
         utc1, utc2 = Tempo.calhms2jd(Y, M, D, h, m, s)
+
+        bigFirst = rand([false, true])
+        utc1, utc2 = bigFirst ? (utc1, utc2) : (utc2, utc1)
+
         tai1, tai2 = Tempo.utc2tai(utc1, utc2)
         u1, u2 = Tempo.tai2utc(tai1, tai2)
 
-        @test u1 ≈ utc1
-        @test u2 ≈ utc2
+        @test u1 ≈ utc1 atol=1e-11 rtol=1e-11
+        @test u2 ≈ utc2 atol=1e-11 rtol=1e-11
+
     end
 
     # test limit case
@@ -131,7 +164,7 @@ end
     tai1, tai2 = Tempo.utc2tai(utc1, utc2)
     u1, u2 = Tempo.tai2utc(tai1, tai2)
 
-    @test u2 ≈ utc2
+    @test u2 ≈ utc2 atol=1e-11 rtol=1e-11
 end
 
 @testset "Function tai2utc vs ERFA (taiutc.c)" begin
@@ -143,7 +176,32 @@ end
         utc1, utc2 = Tempo.tai2utc(tai1, tai2)
         utc1e, utc2e = ERFA.taiutc(tai1, tai2)
 
-        @test utc2 ≈ utc2e
-        @test utc1 ≈ utc1e
+        @test utc2 ≈ utc2e atol=1e-11 rtol=1e-11 
+        @test utc1 ≈ utc1e atol=1e-11 rtol=1e-11
     end
+end
+
+@testset "JulianDates" begin 
+
+    @test j2000(DJ2000)  ≈ 0 atol=1e-11 rtol=1e-11 
+    @test j2000s(DJ2000) ≈ 0 atol=1e-11 rtol=1e-11
+    @test j2000c(DJ2000) ≈ 0 atol=1e-11 rtol=1e-11
+
+    for _ in 1:250 
+        jd1 = DJ2000 
+        jd2 = -10000 + 20000*rand()
+
+        # TODO: review why with high tolerances it has issues 
+        # e.g. -4.391810538712889 ≈ -4.391810538538266
+        @test j2000(jd1+jd2) ≈ j2000(jd1, jd2) atol=1e-9 rtol=1e-9
+
+        @test j2000c(jd1, jd2)*Tempo.CENTURY2DAY ≈ j2000(jd1, jd2) atol=1e-11 rtol=1e-11
+        @test j2000c(jd1+jd2)*Tempo.CENTURY2DAY ≈ j2000(jd1+jd2) atol=1e-11 rtol=1e-11
+
+        @test j2000s(jd1, jd2) ≈ j2000(jd1, jd2)*86400 atol=1e-11 rtol=1e-11
+        @test j2000s(jd1+jd2) ≈ j2000(jd1+jd2)*86400 atol=1e-11 rtol=1e-11 
+
+    end
+
+
 end

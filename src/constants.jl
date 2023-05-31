@@ -1,10 +1,10 @@
 
 export DJ2000, DMJD, DJM0
 
-const DAY2SEC = 86400.0
-const YEAR2SEC = 60.0 * 60.0 * 24.0 * 365.25
-const CENTURY2SEC = 60.0 * 60.0 * 24.0 * 365.25 * 100.0
-const CENTURY2DAY = 36525.0
+const DAY2SEC = 86400
+const YEAR2SEC = 60 * 60 * 24 * 365.25
+const CENTURY2SEC = 60 * 60 * 24 * 365.25 * 100
+const CENTURY2DAY = 36525
 
 """
     DJ2000
@@ -12,7 +12,7 @@ const CENTURY2DAY = 36525.0
 Reference epoch (J2000.0), Julian Date (`2451545.0`). 
 It is `12:00 01-01-2000`.
 """
-const DJ2000 = 2451545.0
+const DJ2000 = 2451545
 
 """
     DMJD

@@ -109,8 +109,7 @@ function parse_iso(s::AbstractString)
     @label error
     throw(
         ArgumentError(
-            "invalid ISO Epoch string - " *
-            "the accepted format is YYYY-MM-DDThh:mm:ss.ffff",
+            "invalid ISO Epoch string - the accepted format is YYYY-MM-DDThh:mm:ss.ffff",
         ),
     )
 end

@@ -3,7 +3,7 @@ module Tempo
 # TODO: remove this dependency - could be handled by Tempo itself?
 using Dates: DateTime as DatesDateTime, datetime2julian, now
 
-using JSMDInterfaces.Errors: AbstractGenericException, @module_error
+using JSMDInterfaces.Errors: AbstractGenericException, @custom_error
 using JSMDUtils
 
 using Pkg.Artifacts

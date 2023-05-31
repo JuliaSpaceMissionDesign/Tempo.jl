@@ -9,7 +9,7 @@ const EPOCH_ORIGIN = (
     :JulianDate, :ModifiedJulianDate, :JulianDate2000, :ModifiedJulianDate2000
 )
 
-const EPOCH_ORIGIN_ACRONYMS = (:JD, :MJD, :J2000, :MJ2000)
+const EPOCH_ORIGIN_ACRONYMS = (:JD, :MJD, :J2000, :MJD2000)
 
 const EPOCH_STARTS = (
     "-4712-01-01T12:00", "1858-11-17T00:00", "2000-01-01T12:00", "2000-01-01T00:00"
