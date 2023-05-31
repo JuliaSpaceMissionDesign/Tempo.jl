@@ -45,6 +45,16 @@ utc = convert(UTC, tai)
 
 ## Documentation 
 For further information on this package please refer to the [stable documentation](https://juliaspacemissiondesign.github.io/Tempo.jl/stable/)
+
+## Tempo.jl vs AstroTime.jl 
+Tempo.jl and AstroTime.jl are very similar libraries that allow transformations between 
+various astronomical time representations. The major differences are:
+
+- AstroTime.jl supports accurate Epoch transformations by leveraging high 
+    precision arithmetics.
+- Tempo.jl is more efficient when multiple timescales conversions must be 
+    performed to convert a given Epoch (e.g., it does not allocate memory).
+
 ## Support 
 If you found this package useful, please consider starring the repository. We also encourage 
 you to take a look at other astrodynamical packages of the [JSMD](https://github.com/JuliaSpaceMissionDesign/) organisation.
