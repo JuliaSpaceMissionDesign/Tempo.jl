@@ -1,11 +1,11 @@
 name = "Tempo"
 uuid = "c33777b2-e695-4fae-9135-aeae8855dd81"
-authors = ["Andrea Pasquale <andrea.pasquale@polimi.it> and Michele Ceresoli <michele.ceresoli@polimi.it>"]
-version = "1.1.0"
+authors = ["JSMD Team"]
+version = "1.1.1"
 
 [deps]
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
-FunctionWrappers = "069b7b12-0de2-55c6-9aab-29f3d0a68a2e"
+FunctionWrappersWrappers = "77dc65aa-8811-40c2-897b-53d922fa7daf"
 JSMDInterfaces = "6b30ee2f-618e-4a15-bf4e-7df7b496e609"
 JSMDUtils = "67801824-9821-48b9-a814-9bfb19231086"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
@@ -13,11 +13,10 @@ PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
 SMDGraphs = "b792745b-7241-45be-ba96-70eb67e8468f"
 
 [compat]
-FunctionWrappers = "1"
-PrecompileTools = "1"
-SMDGraphs = "0.1"
 JSMDInterfaces = "1"
 JSMDUtils = "1"
+PrecompileTools = "1"
+SMDGraphs = "0.1"
 julia = "1"
 
 [extras]

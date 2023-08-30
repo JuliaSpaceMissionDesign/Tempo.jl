@@ -6,6 +6,22 @@ export TIMESCALES,
     timescale_name, 
     timescale_id
 
+
+# Generate the type signature required for the node transformation wrappers, 
+# supporting up to the 2nd derivative without allocations 
+
+_TagAD1{T} = Autodiff.ForwardDiff.Tag{Autodiff.JSMDDiffTag, T}
+_TimeNodeFunAD1{T} = Autodiff.ForwardDiff.Dual{_TagAD1{T}, T, 1}
+
+_TagAD2{T} = Autodiff.ForwardDiff.Tag{Autodiff.JSMDDiffTag, _TimeNodeFunAD1{T}}
+_TimeNodeFunAD2{T} = Autodiff.ForwardDiff.Dual{_TagAD2{T}, _TimeNodeFunAD1{T}, 1}
+
+TimeNodeWrappers{T} = FunctionWrappersWrapper{Tuple{
+    FunctionWrapper{T, Tuple{T}}, 
+    FunctionWrapper{_TimeNodeFunAD1{T}, Tuple{_TimeNodeFunAD1{T}}}, 
+    FunctionWrapper{_TimeNodeFunAD2{T}, Tuple{_TimeNodeFunAD2{T}}}
+}, true}
+
 """
     TimeScaleNode{T} <: AbstractGraphNode 
 
@@ -22,8 +38,8 @@ struct TimeScaleNode{T} <: AbstractGraphNode
     name::Symbol
     id::Int
     parentid::Int
-    ffp::FunctionWrapper{T,Tuple{T}}
-    ftp::FunctionWrapper{T,Tuple{T}}
+    ffp::TimeNodeWrappers{T}
+    ftp::TimeNodeWrappers{T}
 end
 
 get_node_id(s::TimeScaleNode) = s.id
@@ -296,8 +312,22 @@ function add_timescale!(
         end
     end
 
+    # Create the function wrappers for the forward and backward transformation
+    outs = (T, _TimeNodeFunAD1{T}, _TimeNodeFunAD2{T})
+    inps = map(x->Tuple{x}, outs)
+
+    wffp = map(inps, outs) do A, R 
+        FunctionWrapper{R, A}(ffp)
+    end;
+
+    wftp = map(inps, outs) do A, R 
+        FunctionWrapper{R, A}(isnothing(ftp) ? _zero_offset : ftp)
+    end
+
     # Create a new timescale node 
-    tsnode = TimeScaleNode{T}(name, id, pid, ffp, isnothing(ftp) ? _zero_offset : ftp)
+    tsnode = TimeScaleNode{T}(
+        name, id, pid, TimeNodeWrappers{T}(wffp), TimeNodeWrappers{T}(wftp)
+    )
 
     # Insert the new timescale in the graph
     add_timescale!(ts, tsnode)

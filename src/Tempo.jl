@@ -3,8 +3,13 @@ module Tempo
 # TODO: remove this dependency - could be handled by Tempo itself?
 using Dates: DateTime as DatesDateTime, datetime2julian, now
 
+using FunctionWrappersWrappers: FunctionWrappersWrapper, 
+                                FunctionWrappers.FunctionWrapper
+
 using JSMDInterfaces.Errors: AbstractGenericException, @custom_error
+
 using JSMDUtils
+using JSMDUtils.Autodiff
 
 using Pkg.Artifacts
 using PrecompileTools: PrecompileTools
@@ -20,7 +25,6 @@ using SMDGraphs:
     get_mappedid,
     get_mappednode
 
-import FunctionWrappers: FunctionWrapper
 import SMDGraphs: get_node_id, add_vertex!
 
 include("constants.jl")
