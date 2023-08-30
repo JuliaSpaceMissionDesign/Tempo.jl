@@ -13,6 +13,7 @@ PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
 SMDGraphs = "b792745b-7241-45be-ba96-70eb67e8468f"
 
 [compat]
+FunctionWrappersWrappers = "0.1"
 JSMDInterfaces = "1"
 JSMDUtils = "1"
 PrecompileTools = "1"
