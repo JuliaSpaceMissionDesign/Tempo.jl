@@ -215,7 +215,7 @@ end
 function _zero_offset(seconds::T) where {T}
     # TODO: why not make it a blocking error?
     @error "a zero-offset transformation has been applied in the TimeSystem"
-    return T(0.0)
+    return T(0)
 end
 
 """ 
