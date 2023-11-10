@@ -444,7 +444,7 @@ add_timescale!(TIMESCALES, NTS, offset_ffp, parent=TDB, ftp=offset_ftp)
 See also [`@timescale`](@ref), [`TimeScaleNode`](@ref) and [`add_timescale`](@ref).
 ```
 """
-const TIMESCALES::TimeSystem{Float64} = TimeSystem{Float64}()
+const TIMESCALES = TimeSystem{Float64}()
 
 # Populate the default time scales graph
 add_timescale!(TIMESCALES, TT, _zero_offset)
