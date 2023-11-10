@@ -60,7 +60,7 @@ end
 
 A `TimeSystem` object manages a collection of default and user-defined [`TimeScaleNode`](@ref)
 objects, enabling efficient time transformations between them. It leverages a 
-[`MappedDiGraph`](@ref) to keep track of the relationships between the timescales.
+`MappedDiGraph` to keep track of the relationships between the timescales.
 
 ---
 
@@ -251,7 +251,7 @@ julia> add_timescale!(SYSTEM, RTS)
 julia> add_timescale!(SYSTEM, CTS, root_to_child; parent=RTS, ftp=child_to_root)
 
 ### See also 
-See also [`@timescale`](@ref), [`TimeSystem`](@ref) and [`apply_offsets`](@ref).
+See also [`@timescale`](@ref) and [`TimeSystem`](@ref).
 """
 function add_timescale!(
     ts::TimeSystem{T}, 
