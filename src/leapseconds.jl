@@ -58,7 +58,7 @@ end
 
 Leapseconds data.
 """
-const LEAPSECONDS::Leapseconds{Float64} = get_leapseconds()
+const LEAPSECONDS = get_leapseconds()
 
 """
     leapseconds(jd2000::Number)
