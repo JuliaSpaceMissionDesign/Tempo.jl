@@ -12,14 +12,18 @@ jobs:
       fail-fast: false
       matrix:
         version:
+          - '1.6'
+          - '1.7'
           - '1.8'
+          - '1.9'
+          - '1'
           - nightly
         os:
           - ubuntu-latest
         arch:
           - x64
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v1
         with:
           version: ${{ matrix.version }}
