@@ -288,12 +288,11 @@ function jd2cal(dj1::Number, dj2::Number)
 
     # Copy the date, big then small, and re-align to midnight
     if abs(dj1) ≥ abs(dj2)
-        d1 = dj1
-        d2 = dj2
+        d1, d2 = promote(dj1, dj2)
     else
-        d1 = dj2
-        d2 = dj1
+        d1, d2 = promote(dj2, dj1)
     end
+    
     d2 -= 0.5
 
     #  Separate day and fraction
@@ -376,11 +375,9 @@ function utc2tai(utc1, utc2)
     big1 = abs(utc1) >= abs(utc2)
 
     if big1
-        u1 = utc1
-        u2 = utc2
+        u1, u2 = promote(utc1, utc2)
     else
-        u1 = utc2
-        u2 = utc1
+        u1, u2 = promote(utc2, utc1)
     end
 
     # Get TAI-UTC at 0h today
@@ -395,17 +392,15 @@ function utc2tai(utc1, utc2)
 
     # Detect any jump
     # Spread leap into preceding day
-    fd += (Δt24 - Δt0) / 86400.0
+    fd += (Δt24 - Δt0) / 86400
 
     # Assemble the TAI result, preserving the UTC split and order
-    a2 = z2 + fd + Δt0 / 86400.0
+    a2 = z2 + fd + Δt0 / 86400
 
     if big1
-        tai1 = u1
-        tai2 = a2
+        tai1, tai2 = promote(u1, a2)
     else
-        tai1 = a2
-        tai2 = u1
+        tai1, tai2 = promote(a2, u1)
     end
 
     return tai1, tai2
@@ -445,11 +440,9 @@ function tai2utc(tai1, tai2)
     # Put the two parts of the UTC into big-first order
     big1 = abs(tai1) >= abs(tai2)
     if big1
-        a1 = tai1
-        a2 = tai2
+        a1, a2 = promote(tai1, tai2)
     else
-        a1 = tai2
-        a2 = tai1
+        a1, a2 = promote(tai2, tai1)
     end
 
     # Initial guess for UTC
@@ -464,11 +457,9 @@ function tai2utc(tai1, tai2)
 
     # Return the UTC result, preserving the TAI order
     if big1
-        utc1 = u1
-        utc2 = u2
+        utc1, utc2 = promote(u1, u2)
     else
-        utc1 = u2
-        utc2 = u1
+        utc1, utc2 = promote(u2, u1)
     end
 
     return utc1, utc2
