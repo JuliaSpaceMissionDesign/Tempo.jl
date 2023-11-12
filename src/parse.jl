@@ -1,5 +1,3 @@
-export parse_iso
-
 function tryparsenext_base10(
     str::AbstractString, i::Int, len::Int, min_width::Int=1, max_width::Int=0
 )

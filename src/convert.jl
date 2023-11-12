@@ -85,8 +85,9 @@ Convert hours, minutes and seconds to day fraction.
 
 ### Examples 
 ```julia-repl
-julia> Tempo.hms2fd(12, 0.0, 0.0)
+julia> Tempo.hms2fd(12, 0, 0.0)
 0.5
+```
 """
 function hms2fd(h::Integer, m::Integer, s::Number)
 

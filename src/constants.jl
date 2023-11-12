@@ -9,7 +9,7 @@ const CENTURY2DAY = 36525
 """
     DJ2000
 
-Reference epoch (J2000.0), Julian Date (`2451545.0`). 
+Reference epoch [`J2000`](@ref), Julian Date (`2451545.0`). 
 It is `12:00 01-01-2000`.
 """
 const DJ2000 = 2451545
@@ -17,7 +17,7 @@ const DJ2000 = 2451545
 """
     DMJD
 
-Reference epoch (J2000.0), Modified Julian Date (`51544.5`).
+Reference epoch [`J2000`](@ref), Modified Julian Date (`51544.5`).
 """
 const DMJD = 51544.5
 
