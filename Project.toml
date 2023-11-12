@@ -14,7 +14,7 @@ SMDGraphs = "b792745b-7241-45be-ba96-70eb67e8468f"
 
 [compat]
 FunctionWrappersWrappers = "0.1"
-JSMDInterfaces = "1.3"
+JSMDInterfaces = "1.4"
 JSMDUtils = "1"
 PrecompileTools = "1"
 SMDGraphs = "0.1"
