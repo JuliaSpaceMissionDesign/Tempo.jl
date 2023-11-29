@@ -23,7 +23,7 @@ TimeNodeWrappers{T} = FunctionWrappersWrapper{Tuple{
 }, true}
 
 """
-    TimeScaleNode{T} <: AbstractGraphNode 
+    TimeScaleNode{T} <: AbstractJSMDGraphNode 
 
 Define a timescale.
 
@@ -34,7 +34,7 @@ Define a timescale.
 - `ffp` -- offest function from the parent timescale
 - `ftp` -- offset function to the parent timescale
 """
-struct TimeScaleNode{T} <: AbstractGraphNode
+struct TimeScaleNode{T} <: AbstractJSMDGraphNode
     name::Symbol
     id::Int
     parentid::Int
@@ -60,7 +60,7 @@ end
 
 A `TimeSystem` object manages a collection of default and user-defined [`TimeScaleNode`](@ref)
 objects, enabling efficient time transformations between them. It leverages a 
-[`MappedDiGraph`](@ref) to keep track of the relationships between the timescales.
+`MappedDiGraph` to keep track of the relationships between the timescales.
 
 ---
 
@@ -251,7 +251,7 @@ julia> add_timescale!(SYSTEM, RTS)
 julia> add_timescale!(SYSTEM, CTS, root_to_child; parent=RTS, ftp=child_to_root)
 
 ### See also 
-See also [`@timescale`](@ref), [`TimeSystem`](@ref) and [`apply_offsets`](@ref).
+See also [`@timescale`](@ref), [`TimeSystem`](@ref) and `apply_offsets`.
 """
 function add_timescale!(
     ts::TimeSystem{T}, 
