@@ -6,7 +6,7 @@ using Tempo
 
 In this tutorial, the general workflow to be followed when dealing with time representations and their transformations is presented. In particular, most of the features of this package are designed around the [`Epoch`](@ref) data type, which differently from the [`DateTime`](@ref) object, provides the capability to represent time in different standard and user-define time scales.
 
-## Epoch Creation
+## Creating Epochs
 Time representions for space applications embed three different concepts: 
 
 1. The representation type (e.g. Gregorian or Julian calendar representation)
