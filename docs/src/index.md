@@ -37,8 +37,7 @@ utc = convert(UTC, tai)
 ```
 
 ## Tempo.jl vs AstroTime.jl 
-Tempo.jl and [AstroTime.jl](https://github.com/JuliaAstro/AstroTime.jl) are very similar libraries that allow transformations between 
-various astronomical time representations. The major differences are:
+Tempo.jl and [AstroTime.jl](https://github.com/JuliaAstro/AstroTime.jl) are very similar libraries that allow transformations between various astronomical time representations. The major differences are:
 
 - AstroTime.jl supports accurate Epoch transformations by leveraging high 
     precision arithmetics.
