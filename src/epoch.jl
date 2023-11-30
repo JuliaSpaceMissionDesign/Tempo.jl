@@ -186,6 +186,9 @@ end
 # Operations
 
 Base.:-(e1::Epoch{S}, e2::Epoch{S}) where S = value(e1) - value(e2)
+function Base.:-(::Epoch{S1}, ::Epoch{S2}) where {S1, S2}
+    throw(ErrorException("only epochs defined in the same timescale can be subtracted."))
+end 
 
 Base.:+(e::Epoch, x::Number) = Epoch(value(e) + x, timescale(e))
 Base.:-(e::Epoch, x::Number) = Epoch(value(e) - x, timescale(e))
