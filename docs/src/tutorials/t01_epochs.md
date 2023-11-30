@@ -1,4 +1,4 @@
-# [Epoch handling and timescales conversions](@id tutorial_01_epochs)
+# [Epochs Handling and Conversions](@id tutorial_01_epochs)
 
 ```@setup init
 using Tempo
