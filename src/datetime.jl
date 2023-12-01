@@ -260,7 +260,7 @@ function Base.show(io::IO, t::Time)
     h  = lpad(hour(t), 2, '0')
     m  = lpad(minute(t), 2, '0')
     s  = lpad(second(t), 2, '0')
-    sf = lpad(convert(Int, round(1e4*fraction_of_second(t), digits=0)), 4, '0')
+    sf = lpad(convert(Int, floor(1e4*fraction_of_second(t), digits=0)), 4, '0')
 
     return print(io, h, ":", m, ":", s, ".", sf)
 end
