@@ -58,6 +58,10 @@
     e1 = Epoch("2004-05-14T16:43:00 UTC")
     e2 = e1 + floor(10000*rand())*86400
 
+    e3 = Epoch("232.0 TT")
+
+    @test_throws ErrorException e3-e1
+
     ems = e1:e2 
     for j = 2:lastindex(ems)
         @test ems[j] == e1 + 86400*(j-1)
