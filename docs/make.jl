@@ -13,7 +13,7 @@ makedocs(;
         
         "Tutorials" => [
             "Epochs" => "tutorials/t01_epochs.md",
-            "Scales" => "tutorials/t02_scales.md"
+            "Custom Timescales" => "tutorials/t02_scales.md"
         ],
 
         "API" => [

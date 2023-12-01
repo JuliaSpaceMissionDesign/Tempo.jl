@@ -1,47 +1,93 @@
-# [Timescales graphs and extensions](@id tutorial_02_scales)
+# [Creating Custom Timescales](@id tutorial_02_scales)
 
-In `Tempo`, timescales are connected each other via a **directed graph**. Thanks to the 
-structure of the `Tempo` module, it is possible to either extend the current graph of 
-scales or create a completely custom one. Both of this possibilities are the subject of 
-this tutorial.
+In Tempo.jl, all timescales connections and epoch conversions are handled through a **directed graph**.  A default graph ([`TIMESCALES`](@ref)), containing a set of predefined timescales is provided by this package. However, this package also provided a set of routines to either extend such graph or create a completely custom one. In this tutorial, we will explore both alternatives.
 
 ```@setup init
 using Tempo
 ```
 
-## Create a timescales graph
+## Defining a New Timescale
+Custom timescales can be created with the [`@timescale`](@ref) macro, which automatically creates the required types and structures, given the timescale acronym, an integer ID and, eventually, the full name of the timescale. 
 
-To create a computational directed graph to handle timescales, `Tempo` provides the `TimeSystem` type. Therefore, let us define a new time transformation system called `TIMETRANSF`:
+```@repl init 
+@timescale ET 15 EphemerisTime 
+```
+
+The ID is an integer that is internally used to uniquely represent the timescale, whereas the acronym is used to alias such ID. It is also possible to define multiple acronyms associated to the same ID but you cannot assign multiple IDs to the same acronym. In case a full name is not provided, a default one will be built by appending `TimeScale` to the acronym.
+
+!!! warning
+    The IDs from 1 to 10 are used to define the standard timescales of the package. To avoid unexpected behaviors, custom timescales should be registered with higher IDs.
+
+In the previous example, we have created a custom timescale named `EphemerisTime`, with ID 15. We are now able to define epochs with respect to ET, but we cannot perform conversions towards other timescales until we register it in a graph system:
+
+```@setup etScale
+using Tempo 
+@timescale ET 15 EphemerisTime
+```
+
+```@repl etScale
+ep = Epoch(20.425, ET)
+
+convert(TT, ep)
+```
+
+## Extending the Default Graph
+In this section, the goal is to register ET as a zero-offset scale with respect to [`TDB`](@ref). To register this timescale in the default graph, we first need to define the offset functions of ET with respect to TDB: 
+
+```@repl init 
+offset_tdb2et(sec::Number) = 0
+offset_et2tdb(sec::Number) = 0
+```
+
+Since we have assumed that the two scales are identical, our functions will always return a zero offset. Rememeber that timescales graph is **directed**, meaning that if the user desires to go back and forth between two timescales, both transformations must be defined. The input argument of such functions is always the number of seconds since J2000 expressed in the origin timescale.
+
+Finally, the [`add_timescale!`](@ref) method can be used to register ET within the default graph:
+
+```@setup scale1 
+using Tempo 
+@timescale ET 15 EphemerisTime
+offset_tdb2et(sec::Number) = 0
+offset_et2tdb(sec::Number) = 0
+```
+
+```@repl scale1
+add_timescale!(TIMESCALES, ET, offset_tdb2et, parent=TDB, ftp=offset_et2tdb)
+```
+
+If the inverse transformation (from ET to TDB) is not provided, only one-way epoch conversions will be allowed. We can now check that the desired timescale has been properly registered and performs the same as TDB: 
+
+```@repl scale1
+ep = Epoch("200.432 TT")
+
+convert(TDB, ep)
+
+convert(ET, ep)
+```
+
+## Creating a Custom Graph
+
+To create a custom directed graph to handle timescales, Tempo.jl provides the [`TimeSystem`](@ref) type. Therefore, let us define a new time transformation system called `TIMETRANSF`:
 
 ```@repl init
 const TIMETRANSF = TimeSystem{Float64}()
 ```
 
 This object contains a graph and the properties associated to the new time-system defined in
-`TIMETRANSF`. Note that the computational graph at the moment is empty, thus, we need to 
-manually populate it with the new transformations.
+`TIMETRANSF`. At the moment, the computational graph is empty and we need to manually populate it with the new transformations.
 
-## Create a new timescale
-
-In order to insert a new timescale to the graph, a new timescale type alias shall be defined. This can be easily done via the macro `@timescale`. This step requires 3 elements:
-- The timescale acronym (user-defined).
-- The timescale index (it is an `Int` used to uniquely represent the timescale).
-- The timescale fullname.
-
-
-```@repl init
+We begin by creating a new timescale: 
+```@repl init 
 @timescale DTS 1 DefaultTimeScale
 ```
 
-## Register the new timescale
-
-Once, created, the new timescale is ready to be registered. If it is the first scale registered in the computational graph, than, nothing else than the type alias is needed and the registration can be performed as follows:
+Once created, the new timescale is ready to be registered. If it is the first scale registered in the computational graph, nothing else than the type alias is needed and the registration can be performed as follows:
 
 ```@setup graph1
 using Tempo 
 const TIMETRANSF = TimeSystem{Float64}()
 
 @timescale DTS 1 DefaultTimeScale
+@timescale NTSA 2 NewTimeScaleA
 ```
 
 ```@repl graph1
@@ -50,50 +96,25 @@ add_timescale!(TIMETRANSF, DTS)
 TIMETRANSF.scales.nodes
 ```
 
-Instead, in case the timescale is linked to a parent one, an offset function shall be defined. Remember that the computational graph is **directed**, i.e. the transformation to go back and forth to the parent shall be defined if two-way transformations are desired.
+Instead, in case the timescale is linked to a parent one, offset functions shall be defined. In this example, assume we want to register the timescales `NTSA` and `NTSB` such that
+`NTSA` has `DTS` as parent and a constant offset of 1 second, whereas`NTSB` has `NTSA` as parent and a linear offset with slope of 1/86400.
 
-In this example, assume we want to register timescale `NTSA` and a timescale `NTSB`. 
-`NTSA` has `DTS` as parent and a constant offset of 1 second. `NTSB` has `NTSA` has parent 
-and a linear offset with slope of 1/86400.
-
-Then, first create the new scales:
-
-
+We begin by creating the first timescale:
 ```@repl init
 @timescale NTSA 2 NewTimeScaleA
-@timescale NTSB 3 NewTimeScaleB
 ```
 
-Now, let us define the offset functions for `NTSA`:
+We then define its offset functions and register it in `TIMETRANSF` via the [`add_timescale!`](@ref) method:
 
-
-```@repl init
+```@repl graph1
 const OFFSET_DTS_TO_NTSA = 1.0
-@inline offset_dts2ntsa(sec::Number) = OFFSET_DTS_TO_NTSA
-@inline offset_ntsa2dts(sec::Number) = -OFFSET_DTS_TO_NTSA
-```
+offset_dts2ntsa(sec::Number) = OFFSET_DTS_TO_NTSA
+offset_ntsa2dts(sec::Number) = -OFFSET_DTS_TO_NTSA
 
-We can now register `NTSA` to the computational graph using the `add_timescale!` method:
-
-```@setup graph2
-using Tempo 
-const TIMETRANSF = TimeSystem{Float64}()
-
-@timescale DTS 1 DefaultTimeScale
-@timescale NTSA 2 NewTimeScaleA
-
-add_timescale!(TIMETRANSF, DTS)
-
-const OFFSET_DTS_TO_NTSA = 1.0
-@inline offset_dts2ntsa(::Number) = OFFSET_DTS_TO_NTSA
-@inline offset_ntsa2dts(::Number) = -OFFSET_DTS_TO_NTSA
-```
-
-```@repl graph2
 add_timescale!(TIMETRANSF, NTSA, offset_dts2ntsa, parent=DTS, ftp=offset_ntsa2dts)
 ```
 
-Now, if we have a look to the computational graph, we'll se that `NTSA` is registered:
+Now, if we have a look to the computational graph, we'll see that `NTSA` is registered:
 
 ```@setup graph3
 using Tempo 
@@ -114,34 +135,17 @@ add_timescale!(TIMETRANSF, NTSA, offset_dts2ntsa, parent=DTS, ftp=offset_ntsa2dt
 TIMETRANSF.scales.nodes
 ```
 
-As well as, since we have registered both direct and inverse transformations, there is the 
-possibility to transform back and forth from `NTSA` to `DTS`. We can easily see this looking
-at the `paths` contained in the computational graph. Here the timescale are represented by means of the type-alias unique integer assigned during the creation of the new type. 
+If now we create a `DTS` epoch, we can leverage our custom time transformation system to convert it to an epoch in the `NTSA` timescale:
 
-```@repl graph3
-TIMETRANSF.scales.paths
-```
-
-If now we create a `DTS` epoch, it is possible to use the custom time transformation system
-to convert to `NTSA`:
-
-<!-- # Create the new epoch  -->
-<!-- # IMPORTANT: only J2000 seconds Epoch parser works with custom timescales. -->
-<!-- # Call `convert` using the custom time transformation system  -->
-
-```@repl graph3
+```@repl graph3 
 e = Epoch(0.0, DTS)
 
 convert(NTSA, e, system=TIMETRANSF)
 ```
 
-!!! note
-    The `system` is an optimal output if the `Tempo` time transformation system is used.
+Whenever the conversions are based on a custom time system, the graph must be provided as an additional argument to the [`convert`](@ref) method. 
 
-To conclude the example, `NTSB` is has to be inserted. Let's assume that only the transformation `NTSA -> NTSB` can be constructed. Then: 
-
-<!-- # Create the linear offset function -->
-<!-- # Register the timescale to the computational graph -->
+To conclude the example, we will now add the `NTSB` scale but only register the `NTSA -> NTSB` transformation:
 
 ```@repl graph3
 @timescale NTSB 3 NewTimeScaleB
@@ -176,31 +180,15 @@ e = Epoch(0.0, DTS)
 TIMETRANSF.scales.nodes
 ```
 
-Where the new timescale has been registered with the alias `3`. Note however, that from `3` no transformations are available:
+You can see that the new timescale has been registered with the desired integer ID `3`. To test the complete system, we will translate forwad of 2 days the previous epoch `e` and transform it in both timescales: 
 
-```@repl graph4
-TIMETRANSF.scales.paths
-```
+```@repl graph4 
 
-To conclude, let's test the new time transformation system. Let's take the previous `Epoch` 
-translate forward of 2 days and transform to `NTSA` and `NTSB`. We should obtain a translation of `1 sec` and `3 sec` respectively:
-
-<!-- # Translate the epoch -->
-```@repl graph4
 e += 2*86400
-```
 
-<!-- # Convert to `NTSA` -->
-```@repl graph4
 ea = convert(NTSA, e, system=TIMETRANSF)
-```
 
-<!-- # Convert to `NTSB` -->
-```@repl graph4
 eb = convert(NTSB, e, system=TIMETRANSF)
 ```
 
-
-Note that e time transformation system is a **directed** graph! To allow to transform back and forth
-a given timescale, two transformations are necessary. An error will be displayed in case a 
-single transformation is assigned and the reverse one is called. 
+As expected, we obtain translations of 1 and 3 seconds, respectively.
