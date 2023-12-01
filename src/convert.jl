@@ -286,32 +286,69 @@ function jd2cal(dj1::Number, dj2::Number)
     if dj < -68569.5 || dj > 1e9
         throw(DomainError(dj, "the Julian Date shall be between -68569.5 and 1e9."))
     end
+    
+    d1 = round(Int, dj1)
+    d2 = round(Int, dj2)
+    jd = d1 + d2
 
-    # Copy the date, big then small, and re-align to midnight
-    if abs(dj1) ≥ abs(dj2)
-        d1, d2 = promote(dj1, dj2)
-    else
-        d1, d2 = promote(dj2, dj1)
+    # Separate day and fraction
+    f1, f2 = promote(dj1 - d1, dj2 - d2)     
+
+    # Compute f1 + f2 + 0.5 using the compensated summation for improved accuracy.
+    s  = 0.5*one(f1) 
+    cs = zero(f1)
+
+    for x in (f1, f2)
+        t = s + x 
+        cs += abs(s) >= abs(x) ? (s-t) + x : (x-t) + s 
+        s = t 
+        if (s >= 1)
+            jd += 1
+            s -= 1
+        end
+    end
+
+    f = s + cs 
+    cs = f - s
+
+    # Deal with negative f 
+    if f < 0 
+        # Compensated summation: assume that |s| <= 1.0 
+        f = s + 1 
+        cs += (1 - f) + s
+        s = f 
+        f = s + cs 
+        cs = f - s 
+        jd -= 1 
+    end
+
+    # Deal with f that is 1.0 or more (when rounded to double)
+    if ((f-1) >= -eps(f)/4)
+
+        # Compensation summation: assume that |s| <= 1.0 
+        t = s - 1 
+        cs += (s - t) - 1 
+        s = t 
+        f = s + cs 
+        if (-eps()/2 < f)
+            jd += 1 
+            f = max(f, zero(f))
+        end
     end
     
-    d2 -= 0.5
+    # Express day in Gregorian calendar 
+    l = jd + 68569 
+    n = (4l) ÷ 146097
+    l -= (146097n + 3) ÷ 4 
+    i = (4000*(l + 1)) ÷ 1461001
+    l -= (1461i) ÷ 4 - 31 
+    k = (80l) ÷ 2447 
 
-    #  Separate day and fraction
-    f1 = mod(d1, 1)
-    f2 = mod(d2, 1)
-    fd = mod(f1 + f2, 1)
-
-    d = round(Int, d1 - f1) + round(Int, d2 - f2) + round(Int, f1 + f2 - fd)
-    jd = round(Int, d) + 1
-
-    # Express day in Gregorian calendar
-    f = jd + 1401 + (((4 * jd + 274277) ÷ 146097) * 3) ÷ 4 - 38
-    e = 4 * f + 3
-    g = mod(e, 1461) ÷ 4
-    h = 5 * g + 2
-    D = mod(h, 153) ÷ 5 + 1
-    M = mod(h ÷ 153 + 2, 12) + 1
-    Y = e ÷ 1461 - 4716 + (12 + 2 - M) ÷ 12
+    D = (l - (2447k) ÷ 80)
+    l = k ÷ 11 
+    M = k + 2 - 12l
+    Y = 100*(n - 49) + i + l
+    fd = f 
 
     return Y, M, D, fd
 

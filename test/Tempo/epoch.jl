@@ -52,6 +52,11 @@
         )
 
         @test Epoch(0.0, TDB) ≈ Epoch("2000-01-01T12:00:00.0000 TDB")
+
+        # Test rounding errors
+        t = DateTime(Epoch(21, TT)).time
+        @test t.second == 21 
+        @test t.fraction == 0.0
     end
 
     # Colon Operator
