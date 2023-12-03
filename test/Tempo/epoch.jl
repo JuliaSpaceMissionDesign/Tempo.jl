@@ -52,11 +52,20 @@
         )
 
         @test Epoch(0.0, TDB) ≈ Epoch("2000-01-01T12:00:00.0000 TDB")
+
+        # Test rounding errors
+        t = DateTime(Epoch(21, TT)).time
+        @test t.second == 21 
+        @test t.fraction == 0.0
     end
 
     # Colon Operator
     e1 = Epoch("2004-05-14T16:43:00 UTC")
     e2 = e1 + floor(10000*rand())*86400
+
+    e3 = Epoch("232.0 TT")
+
+    @test_throws ErrorException e3-e1
 
     ems = e1:e2 
     for j = 2:lastindex(ems)

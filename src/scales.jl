@@ -87,7 +87,6 @@ julia> add_timescale!(ts, TSB, offset_tsa2tsb; parent=TSA, ftp=offset_tsb2tsa)
 
 ### See also 
 See also [`@timescale`](@ref) and [`add_timescale!`](@ref).
-
 """
 struct TimeSystem{T<:Number}    
     scales::MappedNodeGraph{TimeScaleNode{T},SimpleDiGraph{Int}}
@@ -249,6 +248,7 @@ julia> child_to_root(x::Number) = -13.3;
 julia> add_timescale!(SYSTEM, RTS)
 
 julia> add_timescale!(SYSTEM, CTS, root_to_child; parent=RTS, ftp=child_to_root)
+```
 
 ### See also 
 See also [`@timescale`](@ref) and [`TimeSystem`](@ref).
@@ -430,19 +430,19 @@ in the graph.
 ### Example
 
 ```@example
-# define a new timescale type alias
+# Define a new timescale type alias
 @timescale NTS 100 NewTimeScale
 
-# define offset to and from another timescale in the graph 
+# Define offset to and from another timescale in the graph 
 offset_ffp(seconds) = 1.0
 offset_ftp(seconds) = -1.0
 
-# connect to the graph, with the parent node (TDB in this example)
+# Connect to the graph, with the parent node (TDB in this example)
 add_timescale!(TIMESCALES, NTS, offset_ffp, parent=TDB, ftp=offset_ftp)
+```
 
 ### See also 
-See also [`@timescale`](@ref), [`TimeScaleNode`](@ref) and [`add_timescale`](@ref).
-```
+See also [`@timescale`](@ref) and [`add_timescale!`](@ref).
 """
 const TIMESCALES = TimeSystem{Float64}()
 

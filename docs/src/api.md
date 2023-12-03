@@ -1,29 +1,72 @@
-# API Reference
+# [Public Documentation](@id tempo_api)
 
-## Constants
-
-```@autodocs
-Modules = [Tempo]
-Order = [:constant]
+## Datetime 
+```@docs 
+Date 
+Time 
+DateTime 
+year 
+month 
+day 
+hour 
+minute
+second
+find_dayinyear
 ```
 
-## Types
+## Epochs 
 
-```@autodocs
-Modules = [Tempo]
-Order = [:type]
+### Types
+```@docs 
+Epoch 
+timescale
+value
 ```
 
-## Types
-
-```@autodocs
-Modules = [Tempo]
-Order = [:function]
+### Origins
+```@docs
+JD
+J2000
+MJD
+MJD2000
 ```
 
-## Macros
+## Conversions
+```@docs 
+j2000
+j2000s
+j2000c
+```
 
-```@autodocs
-Modules = [Tempo]
-Order = [:macro]
+## Timescales
+
+### Time System 
+```@docs 
+@timescale 
+timescale_alias
+timescale_name
+timescale_id
+TimeSystem
+add_timescale!
+TIMESCALES
+```
+
+### Default Timescales 
+```@docs 
+GPS
+TAI
+TCB
+TCG
+TDB 
+TDBH
+TT
+UT1
+UTC
+```
+
+## Constants 
+```@docs
+DJ2000
+DMJD 
+DJM0
 ```
