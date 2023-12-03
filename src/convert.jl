@@ -419,13 +419,11 @@ function utc2tai(utc1, utc2)
     end
 
     # Get TAI-UTC at 0h today
-    iy, im, _, fd = jd2cal(u1, u2)
+    _, _, _, fd = jd2cal(u1, u2)
     Δt0 = leapseconds((utc1 - DJ2000) + utc2)
-
     z2 = u2 - fd
 
     # Get TAI-UTC at 0h tomorrow (to detect jumps)
-    iyt, imt, _, _ = jd2cal(u1 + 1.5, z2)
     Δt24 = leapseconds((utc1 - DJ2000) + utc2)
 
     # Detect any jump
