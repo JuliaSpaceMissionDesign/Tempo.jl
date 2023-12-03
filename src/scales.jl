@@ -34,7 +34,7 @@ Define a timescale.
 - `ffp` -- offest function from the parent timescale
 - `ftp` -- offset function to the parent timescale
 """
-struct TimeScaleNode{T} <: AbstractGraphNode
+struct TimeScaleNode{T} <: AbstractJSMDGraphNode
     name::Symbol
     id::Int
     parentid::Int
