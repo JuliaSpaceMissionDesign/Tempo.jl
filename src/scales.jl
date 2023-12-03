@@ -34,7 +34,7 @@ Define a timescale.
 - `ffp` -- offest function from the parent timescale
 - `ftp` -- offset function to the parent timescale
 """
-struct TimeScaleNode{T} <: AbstractGraphNode
+struct TimeScaleNode{T} <: AbstractJSMDGraphNode
     name::Symbol
     id::Int
     parentid::Int
@@ -60,7 +60,7 @@ end
 
 A `TimeSystem` object manages a collection of default and user-defined [`TimeScaleNode`](@ref)
 objects, enabling efficient time transformations between them. It leverages a 
-[`MappedDiGraph`](@ref) to keep track of the relationships between the timescales.
+`MappedDiGraph` to keep track of the relationships between the timescales.
 
 ---
 
@@ -87,7 +87,6 @@ julia> add_timescale!(ts, TSB, offset_tsa2tsb; parent=TSA, ftp=offset_tsb2tsa)
 
 ### See also 
 See also [`@timescale`](@ref) and [`add_timescale!`](@ref).
-
 """
 struct TimeSystem{T<:Number}    
     scales::MappedNodeGraph{TimeScaleNode{T},SimpleDiGraph{Int}}
@@ -215,7 +214,7 @@ end
 function _zero_offset(seconds::T) where {T}
     # TODO: why not make it a blocking error?
     @error "a zero-offset transformation has been applied in the TimeSystem"
-    return T(0.0)
+    return T(0)
 end
 
 """ 
@@ -249,9 +248,10 @@ julia> child_to_root(x::Number) = -13.3;
 julia> add_timescale!(SYSTEM, RTS)
 
 julia> add_timescale!(SYSTEM, CTS, root_to_child; parent=RTS, ftp=child_to_root)
+```
 
 ### See also 
-See also [`@timescale`](@ref), [`TimeSystem`](@ref) and [`apply_offsets`](@ref).
+See also [`@timescale`](@ref) and [`TimeSystem`](@ref).
 """
 function add_timescale!(
     ts::TimeSystem{T}, 
@@ -430,21 +430,21 @@ in the graph.
 ### Example
 
 ```@example
-# define a new timescale type alias
+# Define a new timescale type alias
 @timescale NTS 100 NewTimeScale
 
-# define offset to and from another timescale in the graph 
+# Define offset to and from another timescale in the graph 
 offset_ffp(seconds) = 1.0
 offset_ftp(seconds) = -1.0
 
-# connect to the graph, with the parent node (TDB in this example)
+# Connect to the graph, with the parent node (TDB in this example)
 add_timescale!(TIMESCALES, NTS, offset_ffp, parent=TDB, ftp=offset_ftp)
+```
 
 ### See also 
-See also [`@timescale`](@ref), [`TimeScaleNode`](@ref) and [`add_timescale`](@ref).
-```
+See also [`@timescale`](@ref) and [`add_timescale!`](@ref).
 """
-const TIMESCALES::TimeSystem{Float64} = TimeSystem{Float64}()
+const TIMESCALES = TimeSystem{Float64}()
 
 # Populate the default time scales graph
 add_timescale!(TIMESCALES, TT, _zero_offset)

@@ -47,29 +47,24 @@ If it is not declared, [`TDB`](@ref) will be used as a default timescale.
 
 ### Examples 
 ```julia-repl 
-# standard ISO string 
 julia> Epoch("2050-01-01T12:35:15.0000 TT")
 2050-01-01T12:35:14.9999 TT
 
-# standard ISO string (without scale)
 julia> Epoch("2050-01-01T12:35:15.0000")
 2050-01-01T12:35:14.9999 TDB
 
-# Parse Julian Dates 
 julia> Epoch("JD 2400000.5")
 1858-11-17T00:00:00.0000 TDB
 
-# Parse Modified Julian Dates
 julia> Epoch("MJD 51544.5")
 2000-01-01T12:00:00.0000 TDB
 
-# Parse Julian Dates since J2000 
 julia> Epoch("12.0")
 2000-01-13T12:00:00.0000 TDB
 
-# All Julian Date parsers allow timescales 
 julia> Epoch("12.0 TT")
 2000-01-13T12:00:00.0000 TT
+```
 """
 struct Epoch{S,T}
     scale::S
@@ -191,6 +186,9 @@ end
 # Operations
 
 Base.:-(e1::Epoch{S}, e2::Epoch{S}) where S = value(e1) - value(e2)
+function Base.:-(::Epoch{S1}, ::Epoch{S2}) where {S1, S2}
+    throw(ErrorException("only epochs defined in the same timescale can be subtracted."))
+end 
 
 Base.:+(e::Epoch, x::Number) = Epoch(value(e) + x, timescale(e))
 Base.:-(e::Epoch, x::Number) = Epoch(value(e) - x, timescale(e))

@@ -85,8 +85,9 @@ Convert hours, minutes and seconds to day fraction.
 
 ### Examples 
 ```julia-repl
-julia> Tempo.hms2fd(12, 0.0, 0.0)
+julia> Tempo.hms2fd(12, 0, 0.0)
 0.5
+```
 """
 function hms2fd(h::Integer, m::Integer, s::Number)
 
@@ -285,33 +286,69 @@ function jd2cal(dj1::Number, dj2::Number)
     if dj < -68569.5 || dj > 1e9
         throw(DomainError(dj, "the Julian Date shall be between -68569.5 and 1e9."))
     end
+    
+    d1 = round(Int, dj1)
+    d2 = round(Int, dj2)
+    jd = d1 + d2
 
-    # Copy the date, big then small, and re-align to midnight
-    if abs(dj1) ≥ abs(dj2)
-        d1 = dj1
-        d2 = dj2
-    else
-        d1 = dj2
-        d2 = dj1
+    # Separate day and fraction
+    f1, f2 = promote(dj1 - d1, dj2 - d2)     
+
+    # Compute f1 + f2 + 0.5 using the compensated summation for improved accuracy.
+    s  = 0.5*one(f1) 
+    cs = zero(f1)
+
+    for x in (f1, f2)
+        t = s + x 
+        cs += abs(s) >= abs(x) ? (s-t) + x : (x-t) + s 
+        s = t 
+        if (s >= 1)
+            jd += 1
+            s -= 1
+        end
     end
-    d2 -= 0.5
 
-    #  Separate day and fraction
-    f1 = mod(d1, 1)
-    f2 = mod(d2, 1)
-    fd = mod(f1 + f2, 1)
+    f = s + cs 
+    cs = f - s
 
-    d = round(Int, d1 - f1) + round(Int, d2 - f2) + round(Int, f1 + f2 - fd)
-    jd = round(Int, d) + 1
+    # Deal with negative f 
+    if f < 0 
+        # Compensated summation: assume that |s| <= 1.0 
+        f = s + 1 
+        cs += (1 - f) + s
+        s = f 
+        f = s + cs 
+        cs = f - s 
+        jd -= 1 
+    end
 
-    # Express day in Gregorian calendar
-    f = jd + 1401 + (((4 * jd + 274277) ÷ 146097) * 3) ÷ 4 - 38
-    e = 4 * f + 3
-    g = mod(e, 1461) ÷ 4
-    h = 5 * g + 2
-    D = mod(h, 153) ÷ 5 + 1
-    M = mod(h ÷ 153 + 2, 12) + 1
-    Y = e ÷ 1461 - 4716 + (12 + 2 - M) ÷ 12
+    # Deal with f that is 1.0 or more (when rounded to double)
+    if ((f-1) >= -eps(f)/4)
+
+        # Compensation summation: assume that |s| <= 1.0 
+        t = s - 1 
+        cs += (s - t) - 1 
+        s = t 
+        f = s + cs 
+        if (-eps()/2 < f)
+            jd += 1 
+            f = max(f, zero(f))
+        end
+    end
+    
+    # Express day in Gregorian calendar 
+    l = jd + 68569 
+    n = (4l) ÷ 146097
+    l -= (146097n + 3) ÷ 4 
+    i = (4000*(l + 1)) ÷ 1461001
+    l -= (1461i) ÷ 4 - 31 
+    k = (80l) ÷ 2447 
+
+    D = (l - (2447k) ÷ 80)
+    l = k ÷ 11 
+    M = k + 2 - 12l
+    Y = 100*(n - 49) + i + l
+    fd = f 
 
     return Y, M, D, fd
 
@@ -376,36 +413,30 @@ function utc2tai(utc1, utc2)
     big1 = abs(utc1) >= abs(utc2)
 
     if big1
-        u1 = utc1
-        u2 = utc2
+        u1, u2 = promote(utc1, utc2)
     else
-        u1 = utc2
-        u2 = utc1
+        u1, u2 = promote(utc2, utc1)
     end
 
     # Get TAI-UTC at 0h today
-    iy, im, _, fd = jd2cal(u1, u2)
-    Δt0 = leapseconds((utc1 - DJ2000) + utc2)
-
+    _, _, _, fd = jd2cal(u1, u2)
+    Δt0 = leapseconds((u1 - DJ2000) + u2)
     z2 = u2 - fd
 
     # Get TAI-UTC at 0h tomorrow (to detect jumps)
-    iyt, imt, _, _ = jd2cal(u1 + 1.5, z2)
-    Δt24 = leapseconds((utc1 - DJ2000) + utc2)
+    Δt24 = leapseconds((u1 - DJ2000) + u2)
 
     # Detect any jump
     # Spread leap into preceding day
-    fd += (Δt24 - Δt0) / 86400.0
+    fd += (Δt24 - Δt0) / 86400
 
     # Assemble the TAI result, preserving the UTC split and order
-    a2 = z2 + fd + Δt0 / 86400.0
+    a2 = z2 + fd + Δt0 / 86400
 
     if big1
-        tai1 = u1
-        tai2 = a2
+        tai1, tai2 = promote(u1, a2)
     else
-        tai1 = a2
-        tai2 = u1
+        tai1, tai2 = promote(a2, u1)
     end
 
     return tai1, tai2
@@ -445,16 +476,15 @@ function tai2utc(tai1, tai2)
     # Put the two parts of the UTC into big-first order
     big1 = abs(tai1) >= abs(tai2)
     if big1
-        a1 = tai1
-        a2 = tai2
+        a1, a2 = promote(tai1, tai2)
     else
-        a1 = tai2
-        a2 = tai1
+        a1, a2 = promote(tai2, tai1)
     end
 
     # Initial guess for UTC
     u1 = a1
     u2 = a2
+    
     #  Iterate (in most cases just once is enough)
     for _ in 1:2
         g1, g2 = utc2tai(u1, u2)
@@ -464,11 +494,9 @@ function tai2utc(tai1, tai2)
 
     # Return the UTC result, preserving the TAI order
     if big1
-        utc1 = u1
-        utc2 = u2
+        utc1, utc2 = promote(u1, u2)
     else
-        utc1 = u2
-        utc2 = u1
+        utc1, utc2 = promote(u2, u1)
     end
 
     return utc1, utc2

@@ -40,7 +40,7 @@ for (name, acr, off, start) in
         """
         const $acr = $name()
 
-        export $name, $acr
+        export $acr
 
         Base.show(io::IO, ::$name) = print(io, "$($acro_str)")
         Base.tryparse(::Val{Symbol($acro_str)}) = $acr

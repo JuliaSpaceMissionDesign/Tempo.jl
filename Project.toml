@@ -1,7 +1,7 @@
 name = "Tempo"
 uuid = "c33777b2-e695-4fae-9135-aeae8855dd81"
 authors = ["JSMD Team"]
-version = "1.1.1"
+version = "1.2.0"
 
 [deps]
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
@@ -14,11 +14,11 @@ SMDGraphs = "b792745b-7241-45be-ba96-70eb67e8468f"
 
 [compat]
 FunctionWrappersWrappers = "0.1"
-JSMDInterfaces = "1"
+JSMDInterfaces = "1.5"
 JSMDUtils = "1"
 PrecompileTools = "1"
-SMDGraphs = "0.1"
-julia = "1"
+SMDGraphs = "0.2"
+julia = "1.8"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
