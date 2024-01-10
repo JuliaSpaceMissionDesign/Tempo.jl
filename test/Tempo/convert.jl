@@ -168,7 +168,7 @@ end
 end
 
 @testset "Function tai2utc vs ERFA (taiutc.c)" begin
-    for _ in 1:250
+    for _ in 1:500
         Y, M, D = rand(1975:2015), rand(1:12), rand(1:28)
         h, m, s = rand(0:23), rand(0:59), rand(0.0:59.999)
         tai1, tai2 = Tempo.calhms2jd(Y, M, D, h, m, s)
@@ -178,6 +178,10 @@ end
 
         @test utc2 ≈ utc2e atol=1e-11 rtol=1e-11 
         @test utc1 ≈ utc1e atol=1e-11 rtol=1e-11
+
+        if (utc2 - utc2e > 1e-10)
+            @show Y, M, D, h, m, s
+        end
     end
 end
 

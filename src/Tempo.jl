@@ -1,8 +1,5 @@
 module Tempo
 
-# TODO: remove this dependency - could be handled by Tempo itself?
-using Dates: DateTime as DatesDateTime, datetime2julian, now
-
 using FunctionWrappersWrappers: FunctionWrappersWrapper, 
                                 FunctionWrappers.FunctionWrapper
 

@@ -4,7 +4,6 @@ authors = ["JSMD Team"]
 version = "1.2.0"
 
 [deps]
-Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 FunctionWrappersWrappers = "77dc65aa-8811-40c2-897b-53d922fa7daf"
 JSMDInterfaces = "6b30ee2f-618e-4a15-bf4e-7df7b496e609"
 JSMDUtils = "67801824-9821-48b9-a814-9bfb19231086"
