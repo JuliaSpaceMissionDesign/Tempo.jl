@@ -1,6 +1,4 @@
 
-export DJ2000, DMJD, DJM0
-
 const DAY2SEC = 86400
 const YEAR2SEC = 60 * 60 * 24 * 365.25
 const CENTURY2SEC = 60 * 60 * 24 * 365.25 * 100

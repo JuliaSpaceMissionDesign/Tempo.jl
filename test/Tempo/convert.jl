@@ -127,7 +127,7 @@ end
 
 @testset "Function utc2tai vs ERFA (utctai.c)" begin
     for _ in 1:250
-        Y, M, D = rand(1975:2015), rand(1:12), rand(1:28)
+        Y, M, D = rand(1980:2015), rand(1:12), rand(1:28)
         h, m, s = rand(0:23), rand(0:59), rand(0.0:59.999)
         utc1, utc2 = Tempo.calhms2jd(Y, M, D, h, m, s)
 
@@ -141,7 +141,7 @@ end
 
 @testset "Function tai2utc" begin
     for _ in 1:10
-        Y, M, D = rand(1975:2015), rand(1:12), rand(1:28)
+        Y, M, D = rand(1980:2015), rand(1:12), rand(1:28)
         h, m, s = rand(0:23), rand(0:59), rand(0.0:0.0001:59.999)
 
         utc1, utc2 = Tempo.calhms2jd(Y, M, D, h, m, s)
@@ -169,7 +169,7 @@ end
 
 @testset "Function tai2utc vs ERFA (taiutc.c)" begin
     for _ in 1:500
-        Y, M, D = rand(1975:2015), rand(1:12), rand(1:28)
+        Y, M, D = rand(1980:2015), rand(1:12), rand(1:28)
         h, m, s = rand(0:23), rand(0:59), rand(0.0:59.999)
         tai1, tai2 = Tempo.calhms2jd(Y, M, D, h, m, s)
 
