@@ -71,7 +71,6 @@ Tempo.utc2tai
 ```@docs 
 Tempo.Leapseconds
 Tempo.LEAPSECONDS
-Tempo.get_leapseconds
 Tempo.leapseconds
 ```
 

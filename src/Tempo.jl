@@ -1,8 +1,5 @@
 module Tempo
 
-# TODO: remove this dependency - could be handled by Tempo itself?
-using Dates: DateTime as DatesDateTime, datetime2julian, now
-
 using FunctionWrappersWrappers: FunctionWrappersWrapper, 
                                 FunctionWrappers.FunctionWrapper
 
@@ -30,17 +27,29 @@ using SMDGraphs:
 
 import SMDGraphs: get_node_id
 
+export DJ2000, DMJD, DJM0
+
 include("constants.jl")
 include("errors.jl")
 include("convert.jl")
 include("parse.jl")
-
 include("leapseconds.jl")
 include("offset.jl")
+
+export TIMESCALES, @timescale, add_timescale!, 
+       TimeSystem, timescale_alias, timescale_name, timescale_id
 include("scales.jl")
 
+export Date, Time,
+       year, month, day, find_dayinyear,
+       j2000, j2000s,j2000c, hour, minute, second, DateTime
 include("datetime.jl")
 include("origin.jl")
+
+export Duration, value 
+include("duration.jl")
+
+export Epoch, j2000, j2000s, j2000c, doy, timescale, value
 include("epoch.jl")
 
 # Package precompilation routines

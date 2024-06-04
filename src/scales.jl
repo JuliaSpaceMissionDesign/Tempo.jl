@@ -1,12 +1,3 @@
-export TIMESCALES, 
-    @timescale, 
-    add_timescale!, 
-    TimeSystem,
-    timescale_alias, 
-    timescale_name, 
-    timescale_id
-
-
 # Generate the type signature required for the node transformation wrappers, 
 # supporting up to the 2nd derivative without allocations 
 
@@ -389,9 +380,6 @@ function apply_offsets(sec::Number, ts1::TimeScaleNode, ts2::TimeScaleNode)
 
     return offset
 end
-
-
-
 
 # -------------------------------------
 # DEFAULT TIMESYSTEM and SCALES

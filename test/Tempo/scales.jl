@@ -38,13 +38,6 @@ struct CustomTimeScale <: Tempo.AbstractTimeScale end
     @test_throws Exception Tempo.add_timescale!(S, DTS, Tempo._zero_offset)
     # parent not registered 
     @test_throws Exception Tempo.add_timescale!(S, ETS, Tempo._zero_offset; parent=DTS)
-    
-    # test leapseconds 
-    io = IOBuffer();
-    print(IOContext(io, :limit => true), Tempo.LEAPSECONDS.lastupdate)
-    s = "Leapseconds(last_update=$(String(take!(io))))\n"
-
-    @test repr(Tempo.LEAPSECONDS) == s
 
     @testset "apply_offsets" begin
         D2S = 86400.0

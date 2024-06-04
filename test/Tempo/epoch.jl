@@ -46,7 +46,7 @@
 
         rn0 = rand(-2000:2000)
         rn1 = rand(-1000:1000)
-        @test Epoch("$rn0") - Epoch("$rn1") ≈ (rn0 - rn1) * Tempo.DAY2SEC
+        @test value(Epoch("$rn0") - Epoch("$rn1")) ≈ (rn0 - rn1) * Tempo.DAY2SEC
         @test all(
             collect(Epoch("0"):86400.0:Epoch("2")) .== [Epoch("0"), Epoch("1"), Epoch("2")]
         )
@@ -67,7 +67,7 @@
 
     @test_throws ErrorException e3-e1
 
-    ems = e1:e2 
+    ems = e1:86400:e2 
     for j = 2:lastindex(ems)
         @test ems[j] == e1 + 86400*(j-1)
     end

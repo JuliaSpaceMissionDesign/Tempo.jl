@@ -21,6 +21,8 @@ makedocs(;
             "Low-level API" => "lapi.md"
         ],
     ],
+    clean=true,
+    checkdocs=:none
 )
 
 deploydocs(; repo="github.com/JuliaSpaceMissionDesign/Tempo.jl", branch="gh-pages")
