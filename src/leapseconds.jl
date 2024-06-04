@@ -64,7 +64,7 @@ function Leapseconds{T}() where T
 
     for leapEntry in LEAPSECONDS_DATA
         _, d = cal2jd(leapEntry.year, leapEntry.month, leapEntry.day)
-        push!(jd2000, d)
+        push!(jd2000, d-0.5)
         push!(leap, leapEntry.Δs)
     end
 
