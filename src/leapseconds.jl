@@ -64,7 +64,9 @@ function Leapseconds{T}() where T
 
     for leapEntry in LEAPSECONDS_DATA
         _, d = cal2jd(leapEntry.year, leapEntry.month, leapEntry.day)
-        push!(jd2000, d-0.5)
+        # remove half a day since cal2jd is centered at the midnight while leapseconds 
+        # are stored in j2000 days.
+        push!(jd2000, d - 0.5) 
         push!(leap, leapEntry.Δs)
     end
 

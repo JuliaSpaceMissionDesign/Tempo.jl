@@ -42,20 +42,20 @@ end
 function Base.:-(d1::Duration, d2::Duration) 
     s1, f1 = d1.seconds, d1.fraction
     s2, f2 = d2.seconds, d2.fraction
-    ds, f = fmasf(f1, f2, -1)
+    ds, df = divrem(f1 - f2, 1)
     sec = s1 - s2 + ds 
-    if f < 0
-        sec -= sign(sec)*1
-        f += 1
+    if df < 0
+        sec -= 1
+        df += 1
     end
-    return Duration(convert(Int, sec), f)
+    return Duration(convert(Int, sec), df)
 end
 
 function Base.:+(d1::Duration, d2::Duration) 
     s1, f1 = d1.seconds, d1.fraction
     s2, f2 = d2.seconds, d2.fraction
     s, f = fmasf(f1, f2, 1)
-    return Duration(s1 + s2 + s, f)
+    return Duration(convert(Int, s1 + s2 + s), f)
 end
 
 function Base.:+(d::Duration, x::Number)
@@ -68,12 +68,12 @@ end
 function Base.:-(d::Duration, x::Number)
     es, ef = d.seconds, d.fraction
     xs, xf = divrem(x, 1)
-    ds, f = fmasf(ef, xf, -1)
+    ds, df = divrem(ef - xf, 1)
     sec = es - xs + ds
-    if f < 0
-        sec -= sign(sec)*1
-        f += 1
+    if df < 0
+        sec -= 1
+        df += 1
     end
-    return Duration(convert(Int, sec), f)
+    return Duration(convert(Int, sec), df)
 end
 
