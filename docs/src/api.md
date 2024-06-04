@@ -16,6 +16,11 @@ find_dayinyear
 
 ## Epochs 
 
+### Duration 
+```@docs 
+Duration
+```
+
 ### Types
 ```@docs 
 Epoch 

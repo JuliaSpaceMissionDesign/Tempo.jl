@@ -1,5 +1,3 @@
-export Epoch, j2000, j2000s, j2000c, second, timescale, value
-
 # This is the default timescale used by Epochs 
 const DEFAULT_EPOCH_TIMESCALE = :TDB
 
@@ -68,13 +66,12 @@ julia> Epoch("12.0 TT")
 """
 struct Epoch{S,T}
     scale::S
-    seconds::Int
-    fraction::T
+    dur::Duration{T}
 end
 
 function Epoch{S}(seconds::Number) where {S<:AbstractTimeScale}
     sec, frac = divrem(seconds, 1)    
-    return Epoch{S, typeof(frac)}(S(), Int(sec), frac)
+    return Epoch{S, typeof(frac)}(S(), Duration(Int(sec), frac))
 end
 
 Epoch(sec::Number, ::S) where {S<:AbstractTimeScale} = Epoch{S}(sec)
@@ -89,8 +86,10 @@ Epoch{S,T}(e::Epoch{S,T}) where {S,T} = e
 Epoch{S,T}(e::Epoch{S,N}) where {S, N, T} = Epoch{S}(T(j2000s(e)))
 
 # Construct an epoch from an ISO string and a scale
-function Epoch(s::AbstractString, scale::AbstractTimeScale)
+function Epoch(s::AbstractString, scale::S) where {S <: AbstractTimeScale}
     y, m, d, H, M, sec, sf = parse_iso(s)
+
+    # TODO: the precision of this could be improved
     _, jd2 = calhms2jd(y, m, d, H, M, sec + sf)
     return Epoch(jd2 * 86400, scale)
 end
@@ -140,22 +139,22 @@ function Epoch(s::AbstractString)
     if length(sub) == 2 # check for timescale
         scale = eval(Symbol(sub[2]))
     end
-    return Epoch(parse(Float64, sub[1]) * 86400.0, scale)
+    return Epoch(parse(Float64, sub[1]) * DAY2SEC, scale)
 end
 
 """
-    timescale(ep::Epoch)
+    timescale(e::Epoch)
 
 Epoch timescale.
 """
-timescale(ep::Epoch) = ep.scale
+timescale(e::Epoch) = e.scale
 
 """
-    value(ep::Epoch)
+    value(e::Epoch)
 
 Full `Epoch` value.
 """
-@inline value(ep::Epoch) = ep.seconds + ep.fraction
+@inline value(e::Epoch) = value(e.dur)
 
 """
     j2000(e::Epoch)
@@ -178,6 +177,16 @@ Convert `Epoch` in Julian Date centuries since [`J2000`](@ref).
 """
 j2000c(e::Epoch) = value(e) / CENTURY2SEC
 
+"""
+    doy(e::Epoch)
+
+Find day of year.
+"""
+function doy(e::Epoch) 
+    Y, M, D, _ = jd2cal(DJ2000, j2000(e))
+    return find_dayinyear(M, D, isleapyear(Y))
+end
+
 function Base.show(io::IO, ep::Epoch)
     return print(io, DateTime(ep), " ", timescale(ep))
 end
@@ -185,22 +194,40 @@ end
 # ----
 # Operations
 
-Base.:-(e1::Epoch{S}, e2::Epoch{S}) where S = value(e1) - value(e2)
+function Base.:-(e1::Epoch{S}, e2::Epoch{S}) where S 
+    return e1.dur - e2.dur
+end
 function Base.:-(::Epoch{S1}, ::Epoch{S2}) where {S1, S2}
     throw(ErrorException("only epochs defined in the same timescale can be subtracted."))
 end 
 
-Base.:+(e::Epoch, x::Number) = Epoch(value(e) + x, timescale(e))
-Base.:-(e::Epoch, x::Number) = Epoch(value(e) - x, timescale(e))
-
-function (::Base.Colon)(start::Epoch, step::AbstractFloat, stop::Epoch)
-    step = start < stop ? step : -step
-    return StepRangeLen(start, step, floor(Int64, (stop - start) / step) + 1)
+function Base.:+(e::Epoch{S, N}, x::Number) where {S, N}
+    return Epoch{S, N}(timescale(e), e.dur + x)
 end
 
-(::Base.Colon)(start::Epoch, stop::Epoch) = (:)(start, 86400, stop)
+function Base.:-(e::Epoch{S, N}, x::Number) where {S, N}
+    return Epoch{S, N}(timescale(e), e.dur - x)
+end
 
-Base.isless(e1::Epoch{S}, e2::Epoch{S}) where {S} = value(e1) < value(e2)
+function Base.:+(e::Epoch{S, N}, d::Duration{<:Number}) where {S, N}
+    return Epoch{S, N}(timescale(e), e.dur + d)
+end
+
+function Base.:-(e::Epoch{S, N}, d::Duration{<:Number}) where {S, N}
+    return Epoch{S, N}(timescale(e), e.dur - d)
+end
+
+function (::Base.Colon)(start::Epoch, step::Number, stop::Epoch)
+    step = start < stop ? step : -step
+    diff = value(stop - start)
+    return StepRangeLen(start, step, floor(Int, diff / step) + 1)
+end
+
+function (::Base.Colon)(start::Epoch, step::Duration, stop::Epoch)
+    return (:)(start, value(step), stop)
+end
+
+Base.isless(e1::Epoch{S}, e2::Epoch{S}) where {S} = e1.dur < e2.dur
 
 function Base.isapprox(e1::Epoch{S}, e2::Epoch{S}; kwargs...) where {S}
     return isapprox(value(e1), value(e2); kwargs...)
@@ -241,11 +268,9 @@ end
 Construct a `DateTime` object from an [`Epoch`](@ref).
 """
 function DateTime(ep::Epoch)
-
     y, m, d, H, M, S = jd2calhms(DJ2000, j2000(ep))
     s, f = divrem(S, 1)
 
     return DateTime(y, m, d, H, M, convert(Int, s), f)
-    
 end
 
