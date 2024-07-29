@@ -214,6 +214,9 @@ function (::Base.Colon)(start::Epoch, step::Duration, stop::Epoch)
     return (:)(start, value(step), stop)
 end
 
+(::Base.Colon)(start::Epoch, stop::Epoch) = (:)(start, 86400, stop)
+
+
 Base.isless(e1::Epoch{S}, e2::Epoch{S}) where {S} = e1.dur < e2.dur
 
 function Base.isapprox(e1::Epoch{S}, e2::Epoch{S}; kwargs...) where {S}
