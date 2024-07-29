@@ -29,6 +29,10 @@ value(d::Duration{T}) where T = d.seconds + d.fraction
 # ---
 # Type Conversions and Promotions 
 
+function Base.convert(::Type{Duration{T}}, d::Duration{S}) where {T,S}
+    return Duration(d.seconds, convert(T, d.fraction))
+end
+
 function Base.convert(::Type{T}, d::Duration{S}) where {T<:Number,S}
     return Duration(d.seconds, convert(T, d.fraction))
 end
