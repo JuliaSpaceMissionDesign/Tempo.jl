@@ -99,7 +99,9 @@ value(Δe)
 e3 = Epoch(40, TAI)
 e1 - e3
 ```
-Notice that this operation can be performed only if the two epochs are defined on the same timescale.
+Notice that this operation can be performed only if the two epochs are defined on the same timescale. When computing the difference between two epochs, the result is returned in the 
+form of a [`Duration`](@ref) object. The [`value`](@ref) can then be used to retrieve the 
+actual number of seconds it represents.
 
 Epochs can also be shifted forward and backwards in time by adding or subtracting an arbitrary number of seconds: 
 ```@repl init 
