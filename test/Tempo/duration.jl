@@ -1,6 +1,7 @@
 
 # TestSet for Duration
 @testset "Duration" begin
+
     # Test Duration constructor with a floating point number
     d1 = Duration(5.75)
     @test d1.seconds == 5
@@ -11,9 +12,24 @@
     @test d2.seconds == 10
     @test d2.fraction == 0.25
 
+    # Check Constructor with a Big Float
+    db1 = Duration(BigFloat(2.5422))
+
+    @test db1.seconds == 2 
+    @test db1.fraction ≈ 0.5422 atol=1e-14 rtol=1e-14
+
+    # Test duration type 
+    @test Tempo.ftype(db1) == BigFloat
+
     # Test value function
     @test value(d1) == 5.75
     @test value(d2) == 10.25
+
+    # Test duration conversion 
+    db2 = convert(BigFloat, d1)
+    @test Tempo.ftype(db2) == BigFloat 
+    @test db2.seconds == 5 
+    @test db2.fraction ≈ 0.75 atol=1e-14 rtol=1e-14
 
     # Test isless with a number
     @test d1 < 6.0 
@@ -63,4 +79,5 @@
     @test d10.fraction == d1.fraction
     @test d11.seconds == d1.seconds
     @test d11.fraction == d1.fraction
+
 end

@@ -70,8 +70,8 @@ struct Epoch{S,T}
 end
 
 function Epoch{S}(seconds::Number) where {S<:AbstractTimeScale}
-    sec, frac = divrem(seconds, 1)    
-    return Epoch{S, typeof(frac)}(S(), Duration(Int(sec), frac))
+    d = Duration(seconds)
+    return Epoch{S, ftype(d)}(S(), d)
 end
 
 Epoch(sec::Number, ::S) where {S<:AbstractTimeScale} = Epoch{S}(sec)
@@ -83,7 +83,7 @@ Epoch(dt::DateTime, ::Type{S}) where {S<:AbstractTimeScale} = Epoch{S}(j2000s(dt
 Epoch(e::Epoch) = e
 
 Epoch{S,T}(e::Epoch{S,T}) where {S,T} = e
-Epoch{S,T}(e::Epoch{S,N}) where {S, N, T} = Epoch{S}(T(j2000s(e)))
+Epoch{S,T}(e::Epoch{S,N}) where {S, N, T} = Epoch{S,T}(e.scale, convert(T, e.dur))
 
 # Construct an epoch from an ISO string and a scale
 function Epoch(s::AbstractString, scale::S) where {S <: AbstractTimeScale}
@@ -91,7 +91,7 @@ function Epoch(s::AbstractString, scale::S) where {S <: AbstractTimeScale}
 
     # TODO: the precision of this could be improved
     _, jd2 = calhms2jd(y, m, d, H, M, sec + sf)
-    return Epoch(jd2 * 86400, scale)
+    return Epoch(jd2 * DAY2SEC, scale)
 end
 
 # Construct an epoch from an ISO string
@@ -201,21 +201,8 @@ function Base.:-(::Epoch{S1}, ::Epoch{S2}) where {S1, S2}
     throw(ErrorException("only epochs defined in the same timescale can be subtracted."))
 end 
 
-function Base.:+(e::Epoch{S, N}, x::Number) where {S, N}
-    return Epoch{S, N}(timescale(e), e.dur + x)
-end
-
-function Base.:-(e::Epoch{S, N}, x::Number) where {S, N}
-    return Epoch{S, N}(timescale(e), e.dur - x)
-end
-
-function Base.:+(e::Epoch{S, N}, d::Duration{<:Number}) where {S, N}
-    return Epoch{S, N}(timescale(e), e.dur + d)
-end
-
-function Base.:-(e::Epoch{S, N}, d::Duration{<:Number}) where {S, N}
-    return Epoch{S, N}(timescale(e), e.dur - d)
-end
+Base.:+(e::Epoch, x::Number) = Epoch(timescale(e), e.dur + x)
+Base.:-(e::Epoch, x::Number) = Epoch(timescale(e), e.dur - x)
 
 function (::Base.Colon)(start::Epoch, step::Number, stop::Epoch)
     step = start < stop ? step : -step
@@ -226,6 +213,9 @@ end
 function (::Base.Colon)(start::Epoch, step::Duration, stop::Epoch)
     return (:)(start, value(step), stop)
 end
+
+(::Base.Colon)(start::Epoch, stop::Epoch) = (:)(start, 86400, stop)
+
 
 Base.isless(e1::Epoch{S}, e2::Epoch{S}) where {S} = e1.dur < e2.dur
 

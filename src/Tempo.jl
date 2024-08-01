@@ -38,18 +38,22 @@ include("offset.jl")
 
 export TIMESCALES, @timescale, add_timescale!, 
        TimeSystem, timescale_alias, timescale_name, timescale_id
+
 include("scales.jl")
 
 export Date, Time,
        year, month, day, find_dayinyear,
        j2000, j2000s,j2000c, hour, minute, second, DateTime
+
 include("datetime.jl")
 include("origin.jl")
 
-export Duration, value 
+export Duration, value
+
 include("duration.jl")
 
 export Epoch, j2000, j2000s, j2000c, doy, timescale, value
+
 include("epoch.jl")
 
 # Package precompilation routines

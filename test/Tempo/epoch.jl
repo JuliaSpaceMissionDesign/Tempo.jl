@@ -68,8 +68,10 @@
     @test_throws ErrorException e3-e1
 
     ems = e1:86400:e2 
+    ems2 = e1:e2 
     for j = 2:lastindex(ems)
         @test ems[j] == e1 + 86400*(j-1)
+        @test ems2[j] == e1 + 86400*(j-1)
     end
 
     # Based on Vallado "Fundamental of astrodynamics" page 196
