@@ -92,12 +92,16 @@ The [`Epoch`](@ref) type supports a limited subset of basic mathematical and log
 e1 = Epoch(90.0, TT)
 e2 = Epoch(50.0, TT)
 
-e1 - e2
+Δe = e1 - e2
+
+value(Δe)
 
 e3 = Epoch(40, TAI)
 e1 - e3
 ```
-Notice that this operation can be performed only if the two epochs are defined on the same timescale.
+Notice that this operation can be performed only if the two epochs are defined on the same timescale. When computing the difference between two epochs, the result is returned in the 
+form of a [`Duration`](@ref) object. The [`value`](@ref) can then be used to retrieve the 
+actual number of seconds it represents.
 
 Epochs can also be shifted forward and backwards in time by adding or subtracting an arbitrary number of seconds: 
 ```@repl init 
@@ -163,7 +167,8 @@ eTAI = convert(TAI, e)
 
 A special remark must be made on the conversion between TAI and UTC. The offset between these two timescales is defined by a leap seconds, which are introduced to keep the UTC time scale within 0.9 seconds from UT1. Since the rotation of the Earth is irregular, it is not possible to predict when a new leap second will be introduced in the future. 
 
-The latest NAIF's leap second kernel ([LSK](https://naif.jpl.nasa.gov/pub/naif/generic_kernels/lsk)) is embedded within `Tempo` as a package artifact, which will be manually updated each time a new kernel is released, so that the user effort is minimised. Indeed, transforming an [`Epoch`](@ref) from a generic timescale to UTC is a simple as:
+A leapsecond table is embedded within `Tempo` and will be manually updated each time a new 
+leapsecond is introduced, so that the effort required from the user side is minimised. Indeed, transforming an [`Epoch`](@ref) from a generic timescale to UTC is a simple as:
 
 ```@repl init
 e = Epoch(90.0, TT)

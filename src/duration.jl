@@ -3,11 +3,36 @@
     Duration{T} <: Number
 
 A `Duration` represents a period of time, split into an integer number of seconds and a 
-fractional part.
+fractional part for increased precision.
 
 ### Fields
 - `seconds`: The integer number of seconds.
 - `fraction`: The fractional part of the duration, where `T` is a subtype of `Number`.
+
+---
+
+    Duration(seconds::Number)
+
+Create a `Duration` object from a number of seconds. The type of the fractional part will 
+be inferred from the type of the input argument. 
+
+---
+
+    Duration{T}(seconds::Number)
+
+Create a `Duration` object from a number of seconds with the fractional part of type `T`. 
+
+### Examples 
+```julia-repl 
+julia> d = Duration(10.783)
+Duration{Float64}(10, 0.7829999999999995)
+
+julia> value(d) 
+10.783
+
+julia> d = Duration{BigFloat64}(10.3)
+Duration{BigFloat}(10, 0.300000000000000710542735760100185871124267578125)
+```
 """
 struct Duration{T} <: Number 
     seconds::Int 
@@ -24,6 +49,12 @@ function Duration(seconds::T) where {T <: Number}
 end 
 
 ftype(::Duration{T}) where T = T
+
+"""
+    value(d::Duration)
+
+Return the duration `d`, in seconds.
+"""
 value(d::Duration{T}) where T = d.seconds + d.fraction
 
 # ---
