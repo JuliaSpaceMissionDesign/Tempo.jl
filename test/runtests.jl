@@ -3,5 +3,5 @@ using ERFA
 using Test
 
 @testset "Tempo.jl" verbose = true begin
-    include("Tempo/Tempo.jl")
+    include(joinpath("Tempo", "Tempo.jl"))
 end;
