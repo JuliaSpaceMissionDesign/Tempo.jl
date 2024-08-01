@@ -19,6 +19,7 @@ find_dayinyear
 ### Duration 
 ```@docs 
 Duration
+value
 ```
 
 ### Types
