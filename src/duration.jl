@@ -7,7 +7,7 @@ fractional part.
 
 ### Fields
 - `seconds`: The integer number of seconds.
-- `fraction`: The fractional part of the duration, where `T` is a subtype of `Real`.
+- `fraction`: The fractional part of the duration, where `T` is a subtype of `Number`.
 """
 struct Duration{T} <: Number 
     seconds::Int 
