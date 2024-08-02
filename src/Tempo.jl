@@ -15,7 +15,6 @@ using JSMDInterfaces.Graph:
 using JSMDUtils
 using JSMDUtils.Autodiff
 
-using Pkg.Artifacts
 using PrecompileTools: PrecompileTools
 
 using SMDGraphs:

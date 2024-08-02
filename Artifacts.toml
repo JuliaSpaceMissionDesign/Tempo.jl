@@ -1,6 +1,0 @@
-[leapseconds]
-git-tree-sha1 = "06d758aab0286b3d2af048e4594db84fb3b6d2df"
-
-    [[leapseconds.download]]
-    sha256 = "a1ef6099c00268ba7e0b87cc1c71f10fcb56625617947f266b2408993183a422"
-    url = "https://gist.github.com/MicheleCeresoli/9d1be070139a0e3191b612dc69760ad2/raw/06d758aab0286b3d2af048e4594db84fb3b6d2df.tar.gz"
